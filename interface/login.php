@@ -45,13 +45,17 @@
 	<link rel="stylesheet" type="text/css" href="css/util.css">
 	<link rel="stylesheet" type="text/css" href="css/login.css">
 <!--===============================================================================================-->
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
 </head>
 <body>
 	
 	<div class="limiter">
 		<div class="container-login100">
-			<div class="wrap-login100" >
-				<form class="login100-form validate-form">
+			<div class="wrap-login100 animate__animated animate__zoomIn" >
+				<div class="login100-form validate-form">
 					
 					<span class="login100-form-title p-b-48">
 						<!-- <i class="zmdi zmdi-font"></i> -->
@@ -89,7 +93,7 @@
 							Sign Up
 						</a>
 					</div> -->
-				</form>
+				</div>
 			</div>
 		</div>
 	</div>

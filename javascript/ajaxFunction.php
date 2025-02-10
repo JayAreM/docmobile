@@ -65,7 +65,8 @@
 							// console.log(result);
 							if(result == 1){
 								setCookie("valbalangue",1, 1, '/; samesite=strict');
-								window.location.href = 'main.php'; 
+								// window.location.href = 'main.php'; 
+								window.open('main.php', '_self');
 							}else if(result == 2){
 								alert('Please wait for the activation of your account.')
 							}else if (result == 3){

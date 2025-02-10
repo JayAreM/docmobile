@@ -2889,6 +2889,68 @@
 		}
 
 
+		function balhinFile($source, $destination, $filename)
+		{
+
+			// $source = '/../../../uploads/infra/reduced/';
+			// $destination = '../../tempUpload/';
+			$filename = $this->checkExtension($source, $filename);
+
+			if ($filename != 0) {
+				$file = realpath(dirname(__FILE__)) . $source . $filename;
+				$file_handle = fopen($destination . $filename, 'a+');
+				fwrite($file_handle, file_get_contents($file));
+				fclose($file_handle);
+			}
+
+			return $filename;
+		}
+
+		function checkExtension($path,$filename){
+			$file = realpath( dirname(__FILE__) ). $path . $filename . ".jpg";
+			if (is_file($file)) {
+				return $filename .".jpg";
+			}else{
+				$file = realpath( dirname(__FILE__) ). $path . $filename . ".JPG";
+				if (is_file($file)) {
+					return $filename .".JPG";
+				}else{
+					$file = realpath( dirname(__FILE__) ). $path . $filename . ".png";
+					if (is_file($file)) {
+						return $filename .".png";
+					}else{
+						$file = realpath( dirname(__FILE__) ). $path . $filename . ".PNG";
+						if (is_file($file)) {
+							return $filename .".PNG";
+						}else{
+							$file = realpath( dirname(__FILE__) ). $path . $filename . ".jpeg";
+							if (is_file($file)) {
+								return $filename .".jpeg";
+							}else{
+								$file = realpath( dirname(__FILE__) ). $path . $filename . ".JPEG";
+								if (is_file($file)) {
+									return $filename .".JPEG";
+								}else{
+									$file = realpath( dirname(__FILE__) ). $path . $filename . ".pdf";
+									if (is_file($file)) {
+										return $filename .".pdf";
+									}else{
+										$file = realpath( dirname(__FILE__) ). $path . $filename . ".PDF";
+										if (is_file($file)) {
+											return $filename .".PDF";
+										}else{
+											return 0;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}	
+
+
 	}
 	
 	$database = new MySQLDatabase();

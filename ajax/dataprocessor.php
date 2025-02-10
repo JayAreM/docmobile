@@ -67,7 +67,12 @@
 					$database->query($sql);
 					
 					$_SESSION['employeeNumber'] =  $data['EmployeeNumber'];
-					
+					$employeeNumber = $_SESSION['employeeNumber'];
+					$sql1 = "Select * from citydoc.userposition where EmployeeNumber = '$employeeNumber'";
+					$result1 = $database->query($sql1);		
+					$data1 = $database->fetch_array($result1);
+					$positiontitle = $data1['Title'];
+					$_SESSION['PositionTitle'] = $positiontitle;
 					$fullName = $data['FirstName']. ' ' . $data['MiddleName'] . ' ' . $data['LastName'];
 					$office = trim($data['OfficeCode']);
 					$accountType = $data['AccountType'];

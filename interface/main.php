@@ -24,37 +24,59 @@ require_once(ROOTER . 'includes/database.php');
 
     $employeeNumber = $_SESSION['employeeNumber'];
 
-    $sql = "SELECT COUNT(*) AS TotalCount
-        FROM (
-            SELECT * 
-            FROM citydoc2023.voucherhistory 
-            WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
-            UNION ALL
-            SELECT * 
-            FROM citydoc2023.voucherhistory 
-            WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
-            UNION ALL
-            SELECT * 
-            FROM citydoc2024.voucherhistory 
-            WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
-            UNION ALL
-            SELECT * 
-            FROM citydoc2025.voucherhistory 
-            WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
-        ) AS TotalReceived";
+    // $sql = "SELECT COUNT(*) AS TotalCount
+    //     FROM (
+    //         SELECT * 
+    //         FROM citydoc2023.voucherhistory 
+    //         WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
+    //         UNION ALL
+    //         SELECT * 
+    //         FROM citydoc2023.voucherhistory 
+    //         WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
+    //         UNION ALL
+    //         SELECT * 
+    //         FROM citydoc2024.voucherhistory 
+    //         WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
+    //         UNION ALL
+    //         SELECT * 
+    //         FROM citydoc2025.voucherhistory 
+    //         WHERE ModifiedBy = '$employeeNumber' AND status = 'admin received'
+    //     ) AS TotalReceived";
+    
 
-    $result = $database->query($sql);
+    // $result = $database->query($sql);
    
-    $year = date('Y');
+    // $year = date('Y');
 
-    $data = $database->fetch_array($result);
+    // $data = $database->fetch_array($result);
 
-    $sql1 = "SELECT  *, DATEDIFF(CURRENT_DATE, STR_TO_DATE(DateModified, '%Y-%m-%d %H:%i')) AS DaysAgo , Status
-            FROM 
-            citydoc2025.voucherhistory where ModifiedBy = '$employeeNumber' and DateModified like '%$year%'";
-    $result1 = $database->query($sql1);
-    $data1 = $database->fetch_array($result1);
-    $sqlgender = "select "
+    // $sql1 = "SELECT  *, DATEDIFF(CURRENT_DATE, STR_TO_DATE(DateModified, '%Y-%m-%d %H:%i')) AS DaysAgo , Status
+    //         FROM 
+    //         citydoc2025.voucherhistory where ModifiedBy = '$employeeNumber' and DateModified like '%$year%'";
+    // $result1 = $database->query($sql1);
+    // $data1 = $database->fetch_array($result1);
+
+    // if (isNotMobile()) {
+    //     $link = "<script>window.open('../../../citydoc2025/interface/main.php','_self')</script>";
+    // } 
+    // if (isset($link)) {
+    //     echo $link;
+    //     exit();
+    // }
+    
+    // function isNotMobile() {
+    //     $userAgent = $_SERVER['HTTP_USER_AGENT'];
+    //     $mobileAgents = ['Mobile', 'Android', 'Silk/', 'Kindle', 'BlackBerry', 'Opera Mini', 'Opera Mobi'];
+    
+    //     foreach ($mobileAgents as $agent) {
+    //         if (strpos($userAgent, $agent) !== false) {
+    //             return false; // If it's a mobile device, return false
+    //         }
+    //     }
+    //     return true; // If no mobile keywords found, it's NOT a mobile
+    // }
+    
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,9 +92,13 @@ require_once(ROOTER . 'includes/database.php');
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="../images/system2.png"
         type="image/x-icon" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
     <title>DocMobile</title>
 </head>
-<body id="body" style="overflow-x: hidden;">
+<body id="body" style="overflow-x: hidden;" class="animate__animated animate__fadeIn">
     <!--=============== HEADER ===============-->
     <header class="header" id="header">
         <div class="header__container">
@@ -85,6 +111,7 @@ require_once(ROOTER . 'includes/database.php');
                 <i class="ri-menu-line"></i>
             </button>
         </div>
+
     </header>
 
     <!--=============== SIDEBAR ===============-->
@@ -99,7 +126,8 @@ require_once(ROOTER . 'includes/database.php');
                 <div class="sidebar__info">
                     <h3><?php echo $_SESSION['firstName'];?></h3>
                     <span style=""><?php echo $_SESSION['officeName'];?></span>
-
+                    <br>
+                    <span style=""><?php echo $_SESSION['PositionTitle'];?></span>
                 </div>
             </div>
 
@@ -113,7 +141,7 @@ require_once(ROOTER . 'includes/database.php');
                             <span>Dashboard</span>
                         </a>
 
-                        <a href="#" class="sidebar__link" onclick="showSection('Tracker-section')">
+                        <a href="#" class="sidebar__link" onclick="showSection('Tracker-section')" id="trackerclicksection">
                             <i class="ri-search-line"></i>
                             <span>Tracker</span>
                         </a>
@@ -147,15 +175,88 @@ require_once(ROOTER . 'includes/database.php');
     <!--=============== MAIN CONTENT ===============-->
     <main class="main container" id="main" style="overflow-x: hidden;">
         <!-- Dashboard Section -->
-        <section id="dashboard-section" style="overflow-x: hidden;">
-            <h1>Dashboard Menu</h1>
+        <section id="dashboard-section">
+            <h1>Dashboard</h1>
             <p>Welcome to the dashboard overview.</p>
+
+            <div class="inspector-card">
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <h2>Inspection Required</h2>
+                    </div>
+                    <div class="inspection-body">
+                        <p><strong>User:</strong> John Doe</p>
+                        <p><strong>Status:</strong> Pending Inspection</p>
+                        <button class="inspection-btn">Inspect Now</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Tracker Section -->
-        <section id="Tracker-section" style="display: none;height:70vh;overflow-y: auto; overflow-x: hidden;">
+        <section id="Tracker-section" style="display: none;">
             <div class="container" >
-                <h1>Tracker</h1>
+                <!-- <h1>Tracker</h1> -->
                 <div class="search-container">
                     <select class="search-dropdown" id="yearInput">
                         <option value="">Year</option>
@@ -164,13 +265,14 @@ require_once(ROOTER . 'includes/database.php');
                         <option value="2023">2023</option>
                         <option value="2022">2022</option>
                     </select>
-                    <input type="text" id="trackingNumberInput" class="search-input" placeholder="Search..." onkeypress="checkEnter(event)">
+                    <input type="text" id="trackingNumberInput" class="search-input" placeholder="Search..." onkeypress="checkEnter(event)" value='8751-1'>
                     <button class="search-button"><i class="fa fa-search" onclick="searchTracking()"></i></button>
                 </div>
 
-                <div id="searchcontainer" class="tracker-results" ></div>
+                <div style="max-height:73vh;overflow-x:hidden;overflow-y:auto;">
+                    <div id="searchcontainer" class="tracker-results" ></div>
 
-                
+                </div>
                 <!-- Modal InfraPDD UPLOADER -->
                 <div id="infrapddUploader" class="uploader-overlay" style="display:none;">
                     <div class="uploader-content">
@@ -211,30 +313,6 @@ require_once(ROOTER . 'includes/database.php');
                     </div>
                 </div>
 
-
-                <!-- <div id="infrapddUploader" class="uploader-overlay" style="display:none;">
-                    <div class="uploader-content">
-                        <span class="close-btn" onclick="closeInfrapddUploader()">&times;</span>
-                        <h2>Project Update</h2>
-
-                        <label for="progress">Progress</label>
-                        <input type="number" id="progress" class="input-field" placeholder="Enter progress %">
-
-                        <label for="dateVisited">Date Visited</label>
-                        <input type="date" id="dateVisited" class="input-field">
-
-                        <label for="details">Details</label>
-                        <textarea id="details" class="input-field" placeholder="Enter details"></textarea>
-
-                        <label for="uploadPictures">Upload Pictures</label>
-                        <input type="file" id="uploadPictures" class="input-field" multiple>
-
-                        <label for="videoLink">Video Link</label>
-                        <input type="url" id="videoLink" class="input-field" placeholder="Enter video link">
-
-                        <button class="btn btn-primary">Upload</button>
-                    </div>
-                </div> -->
 
             </div>
         </section>
@@ -287,7 +365,9 @@ require_once(ROOTER . 'includes/database.php');
 </body>
 <script src="../javascript/html5-qrcode.min1xxx.js"></script>
 <script>
-
+    // document.getElementById("trackerclicksection").click();
+    // alert(document.getElementById("Tracker-section").textContent);
+  
     function loader(container) {
         // const container = document.getElementById('searchcontainer');
         container.innerHTML = `
@@ -552,8 +632,8 @@ require_once(ROOTER . 'includes/database.php');
     }
 
     function saveInfraUploadPre() { 
-        var tnNumElement = document.getElementById('tracknumid'); 
-        var tnNum = tnNumElement ? tnNumElement.innerText.trim() : ""; 
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        // var tnNum = tnNumElement ? tnNumElement.innerText.trim() : ""; 
         var pictures = document.getElementById('infraUpFilePre').files;
         var yearNumElement = document.getElementById('yearid'); 
         var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
@@ -674,6 +754,18 @@ require_once(ROOTER . 'includes/database.php');
 
 
     
+    function openModal(src) {
+        const modal = document.getElementById("imageModal");
+        const fullImage = document.getElementById("fullImage");
+        fullImage.src = src;
+        modal.style.display = "flex"; 
+    }
+
+    function closeModal() {
+        document.getElementById("imageModal").style.display = "none";
+    }
+
+
 
 </script>
 </html>

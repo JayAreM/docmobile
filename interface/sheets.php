@@ -16,17 +16,39 @@ class Sheets extends MySQLDatabase {
         $sql = "Select count(*) as count from citydoc$trackingyear.infrauploads where TrackingNumber = '$trackingNumber' and type = 'Image'";
         $result = $this->query($sql);
         $data = $result->fetch_array();
+        $pic_Count = $data['count'];
 
 
         if( $_SESSION['perm'] == '40'){
             return "
                 <tr class='uploadpicture-container' style=''>
                     <td class='trackertd'> <small>".$numberRow++."</small> </td>
-                    <td class='trackerlabel' style='white-space:nowrap'> Pre-Construction Pictures </td>
+                    <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'> Pre-Construction Pictures ($pic_Count)</td>
                     <td style='text-align:right;'>
                         <button class='btn btn-primary' onclick='openInfrapddUploader($trackingNumber,$trackingyear)' style='vertical-align:bottom;padding:0px 5px;border-radius:2px;margin-bottom:0px;margin-right:10px;'>
                             +
                         </button>
+
+                    </td>
+                </tr>
+            ";
+        }
+    }
+
+    function MyProjectDetailsgenerateInfraUploadPDDButton($trackingNumber, $trackingyear,$numberRow) {
+        $sql = "Select count(*) as count from citydoc$trackingyear.infrauploads where TrackingNumber = '$trackingNumber' and type = 'Image'";
+        $result = $this->query($sql);
+        $data = $result->fetch_array();
+        $pic_Count = $data['count'];
+
+
+        if( $_SESSION['perm'] == '40'){
+            return "
+                <tr class='uploadpicture-container' style=''>
+                    <td class='trackertd'> <small>".$numberRow++."</small> </td>
+                    <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'> Pre-Construction Pictures ($pic_Count)</td>
+                    <td style='text-align:right;'>
+
                     </td>
                 </tr>
             ";
@@ -37,35 +59,58 @@ class Sheets extends MySQLDatabase {
         $imageHtml = '';
         foreach($arrayList as $f){
             $sourcePath = '../../tempUpload/' . $f;
+            if (file_exists($sourcePath)) {
             list($width, $height) = getimagesize($sourcePath);
             
            
-            $imageHtml .= '<img class="image-item" src="' . $sourcePath . '" onclick="openModal(\'' . $sourcePath . '\')">';
-         
+            $imageHtml .= '<img class="image-item" src="' . $sourcePath . '" onclick="openModalImage(\'' . $sourcePath . '\')">';
+            }
         }
         
-        $sheet = '<div class="image-container">' . $imageHtml . '</div>';
+        $sheet = '<div class="image-container" style="margin-left:.85rem;">' . $imageHtml . '</div>';
         
         return $sheet;
     }
     
 
-    
-
-
-    function balhinFile1($filename){
+    // function balhinFile1($filename){
 		
-		$source = '/../../../uploads/infra/reduced/';
-		$destination = '../../tempUpload/';
+	// 	$source = '/../../../uploads/infra/reduced/';
+	// 	$destination = '../../tempUpload/';
 
-		if($filename != 0){
-			$file = realpath( dirname(__FILE__) ). $source . $filename;
-			$file_handle = fopen($destination . $filename , 'a+');
+	// 	if($filename != 0){
+	// 		$file = realpath( dirname(__FILE__) ). $source . $filename;
+	// 		$file_handle = fopen($destination . $filename , 'a+');
 
-			fwrite($file_handle, file_get_contents($file));
-			fclose($file_handle);
-		}
-	}
+	// 		fwrite($file_handle, file_get_contents($file));
+	// 		fclose($file_handle);
+	// 	}
+	// }
+
+    function balhinFile1($filename) {
+        $source = realpath(__DIR__ . '/../../../uploads/infra/reduced/' . $filename);
+        $destination = '../../tempUpload/' . $filename;
+    
+        // Check if the source file exists before proceeding
+        if ($filename && file_exists($source)) {
+            // Ensure the destination directory exists
+            if (!is_dir(dirname($destination))) {
+                mkdir(dirname($destination), 0777, true); // Create directory if missing
+            }
+    
+            // Open the destination file safely
+            $file_handle = fopen($destination, 'a+');
+            if ($file_handle) {
+                fwrite($file_handle, file_get_contents($source));
+                fclose($file_handle);
+            } else {
+                error_log("Failed to open destination file: " . $destination);
+            }
+        } else {
+            error_log("Source file not found: " . $source);
+        }
+    }
+    
 
     // function balhinFile1() {
     //     $sourceDir = realpath(__DIR__ . '/../../../uploads/infra/reduced/') . '/';
@@ -160,7 +205,7 @@ class Sheets extends MySQLDatabase {
     
         // Modal structure (hidden by default)
         $output .= "
-        <div id='imageModal' class='modal-image' onclick='closeModal()'>
+        <div id='imageModal' class='modal-image' onclick='closeModalImage()'>
             <span class='close-image'>&times;</span>
             <img class='modal-content-image' id='fullImage'>
         </div>";
@@ -777,11 +822,22 @@ class Sheets extends MySQLDatabase {
              
                 if($type == 'Video'){
                     $filename = $data['Filename'];
-                    $videolink = '<iframe width="90%"src="'.$filename.'" " 
-                                    title="YouTube video player" frameborder="0" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                    allowfullscreen>
-                            </iframe>';
+                    function convertToEmbedUrl($url) {
+                        // Extract video ID from YouTube short link or standard URL
+                        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/', $url, $matches) || 
+                            preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                            return 'https://www.youtube.com/embed/' . $matches[1];
+                        }
+                        return $url; // Return original if no match
+                    }
+                    
+                    $filename = convertToEmbedUrl($filename);
+                    
+                    $videolink = '<iframe width="100%" src="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '" 
+                                             title="YouTube video player" frameborder="0" 
+                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                             allowfullscreen>
+                                  </iframe>';
                 }else if($type == 'Image'){
                     $datevisited = $data['DateVisit'];
                 }
@@ -789,9 +845,6 @@ class Sheets extends MySQLDatabase {
                 unset($data);
             }
             
-
-
-
             // $sql="select * from citydoc$trackingyear.vouchercurrent where trackingnumber = '$trackingNumber'";
             // $result = $this->query($sql);
             // $data = $result->fetch_array();
@@ -808,18 +861,73 @@ class Sheets extends MySQLDatabase {
             $result = $this->query($sql);
             $data = $result->fetch_array();
             $location = $data['Location'];
+            $brgy = $data['Barangay'];
             $progress =  $data['Progress'];
             $duration = !empty($data['Duration']) ? $data['Duration'] : "";
             unset($data);
 
+            $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
+            $result = $this->query($sql);
 
             if($_SESSION['perm'] == '40'){
-                echo "
-                <div>
-                    <div class='trackerheader'>
-                        <span class='tracker-title'>" . $newRecord['Status'] . "</span>
-                        <p class='tracker-office'>" . $newRecord['OfficeName'] . "</p>
+                $cardHtml = '
+                <div class="project-team-card">
+                    <h2 class="project-team-title">Project Team</h2>
+                    <div class="project-team-section">';
+
+                // Define hardcoded roles
+                $hardcodedRoles = [
+                    "Programmer" => [],
+                    "Checker" => [],
+                    "Draftsman" => [],
+                    "Surveyor" => [],
+                    "Inspector" => []
+                ];
+                $employeeNum = '';
+                while ($row = $result->fetch_array()) {
+                    $role = $row['Function'];
+                    $member = $row['Name'];
+                    $employeeNum = $row['EmployeeNumber'];
+
+                    if (isset($hardcodedRoles[$role])) {
+                        $hardcodedRoles[$role][] = $member;
+                    }
+                }
+
+                foreach ($hardcodedRoles as $role => $members) {
+                    $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>' . htmlspecialchars($role) . '</span>
+                                    <button class="ri-edit-box-line" style="margin-left:.3rem;font-weight:bold;color:var(--text-color);"  
+                                        onclick="EditRole(\'' . htmlspecialchars($trackingNumber) . '\', \'' . htmlspecialchars($trackingyear) . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($employeeNum) . '\',searchcontainer)">
+                                    </button>
+                                </div>';
+    
+                    
+                    if (!empty($members)) {
+                        $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
+                    } else {
+                        $cardHtml .= '<div class="project-members">-</div>'; 
+                    }
+                }
+
+                $cardHtml .= '
                     </div>
+                </div>';
+
+                $status = $newRecord['Status'];
+                echo "
+                    <div>
+                        <div class='trackerheader'>
+                            <span class='tracker-title'>" . $status . "  
+                                <button class='ri-edit-box-line' 
+                                    style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
+                                    onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", searchcontainer)'>
+                                </button>
+                            </span>
+                            <p class='tracker-office'>" . htmlspecialchars($newRecord['OfficeName'], ENT_QUOTES) . "</p>
+                        </div>
+                    </div>
+
                     <div class='tracker-details'>
                         <table border='0'>
                             <tbody>
@@ -851,7 +959,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2'>Project Name</td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
                                     
                                     </tr>
                                     <tr>
@@ -863,7 +971,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2'>Location</td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location <button class='ri-edit-box-line' style='margin-left:1.45rem;font-weight:bold;color:var(--text-color);' onclick='openEditLocation($trackingNumber,$trackingyear)'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -874,26 +982,38 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel'>TN</td>
-                                        <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditBrgy($trackingNumber,$trackingyear)'></button></td>
+                                    
                                     </tr>
                                     <tr>
-                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel'>Year</td>
-                                        <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='white-space:nowrap'>Project Duration</td>
-                                        <td class='trackingspecs' >
-                                            ".$duration."
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em; padding-bottom:1em'>
+                                        $brgy
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel'>Date Visited</td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
                                         <td class='trackingspecs' >
-                                            ".$datevisited."
+                                            ".$duration."
+                                        </td>
+                                    </tr>
+                                    <tr style=''>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackingspecs' >
+                                            <div>
+                                            ".$datevisited." <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditDateVisited($trackingNumber,$trackingyear)'></button>
                                         </td>
                                     </tr>
                                     " . $this->generateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
@@ -901,21 +1021,20 @@ class Sheets extends MySQLDatabase {
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
                                     <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
-                                        <div>Video Link</div>
+                                        <div style='color:var(--first-color)'>Video Link <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);font-weight:bold;' onclick='openEditVideoLink($trackingNumber,$trackingyear)'></button></div>
                                         <div style='margin-top:5px;'> $videolink </div>
                                     </td>
 
                                         
 
-                                    </tr>
-                                    <tr>
-                                    
-                                        
                                     </tr>";
                                     
                                 echo "
                             </tbody>
                         </table>
+
+                        $cardHtml
+                        
                     </div>
                 
                 </div>";
@@ -924,6 +1043,502 @@ class Sheets extends MySQLDatabase {
             
         }
 
+    }
+
+    function MyProjectDetails($trackingNumber,$newRecord,$trackingyear){
+        $newRecord = $this->searchTrackingNumber2022($trackingNumber,$trackingyear );
+        $numberRow = 1;
+        
+        if($newRecord['TrackingType'] == 'NF'){
+            $sql="select * from citydoc$trackingyear.infrauploads where trackingnumber = '$trackingNumber' ";
+            $result = $this->query($sql);
+            $videolink = '';
+            $datevisited = '';
+            while($data = $result->fetch_array()){
+                $type = $data['Type'];
+             
+                if($type == 'Video'){
+                    $filename = $data['Filename'];
+                    function convertToEmbedUrl($url) {
+                        // Extract video ID from YouTube short link or standard URL
+                        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/', $url, $matches) || 
+                            preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                            return 'https://www.youtube.com/embed/' . $matches[1];
+                        }
+                        return $url; // Return original if no match
+                    }
+                    
+                    $filename = convertToEmbedUrl($filename);
+                    
+                    $videolink = '<iframe width="100%" src="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '" 
+                                             title="YouTube video player" frameborder="0" 
+                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                             allowfullscreen>
+                                  </iframe>';
+                }else if($type == 'Image'){
+                    $datevisited = $data['DateVisit'];
+                }
+
+                unset($data);
+            }
+            
+            // $sql="select * from citydoc$trackingyear.vouchercurrent where trackingnumber = '$trackingNumber'";
+            // $result = $this->query($sql);
+            // $data = $result->fetch_array();
+            // $expensecode = !empty($data['PR_AccountCode']) ? $data['PR_AccountCode'] : "";
+            // unset($data);
+
+            $sql="select * from citydoc$trackingyear.programcode where trackingnumberinfra = '$trackingNumber' and category = 'Infrastructure Project'";
+            $result = $this->query($sql);
+            $data = $result->fetch_array();
+            $projectname = !empty($data['Name']) ? $data['Name'] : "";
+            unset($data);
+            $progress = 0;
+            $sql="select * from citydoc$trackingyear.infra where trackingnumber = '$trackingNumber'";
+            $result = $this->query($sql);
+            $data = $result->fetch_array();
+            $location = $data['Location'];
+            $brgy = $data['Barangay'];
+            $progress =  $data['Progress'];
+            $duration = !empty($data['Duration']) ? $data['Duration'] : "";
+            unset($data);
+
+            $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
+            $result = $this->query($sql);
+
+            if($_SESSION['perm'] == '40'){
+                $cardHtml = '
+                <div class="project-team-card">
+                    <h2 class="project-team-title">Project Team</h2>
+                    <div class="project-team-section">';
+
+                // Define hardcoded roles
+                $hardcodedRoles = [
+                    "Programmer" => [],
+                    "Checker" => [],
+                    "Draftsman" => [],
+                    "Surveyor" => [],
+                    "Inspector" => []
+                ];
+                $employeeNum = '';
+                while ($row = $result->fetch_array()) {
+                    $role = $row['Function'];
+                    $member = $row['Name'];
+                    $employeeNum = $row['EmployeeNumber'];
+
+                    if (isset($hardcodedRoles[$role])) {
+                        $hardcodedRoles[$role][] = $member;
+                    }
+                }
+
+                foreach ($hardcodedRoles as $role => $members) {
+                    $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>' . htmlspecialchars($role) . '</span>
+                                    
+                                </div>';
+    
+                    
+                    if (!empty($members)) {
+                        $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
+                    } else {
+                        $cardHtml .= '<div class="project-members">-</div>'; 
+                    }
+                }
+
+                $cardHtml .= '
+                    </div>
+                </div>';
+
+                $status = $newRecord['Status'];
+                echo "
+                    <div>
+                        <div class='trackerheader' >
+                            <table border='0'>
+                                <tr>
+                                    <td>
+                                        <span class='tracker-title'>" . $status . "  
+                                           
+                                        </span>
+                                    </td>   
+                                    <td style='text-align:right;width:0px;'>
+                                     <button class='ri-edit-box-line' 
+                                                style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
+                                            onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", mycardprojectresults)'>
+                                            </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan='2'>
+                                        <p class='tracker-office'>" . htmlspecialchars($newRecord['OfficeName'], ENT_QUOTES) . "</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class='tracker-details'>
+                        <table border='0'>
+                            <tbody>
+                                ";
+                                // $fields = [
+                                //     'TN' => 'TrackingNumber',
+                                //     'Fund Year' => 'Year',
+                                //     'Contructor' => 'Claimant',
+                                //     'Document' => 'DocumentType',
+                                //     'Fund' => 'Fund',
+                                //     'Net Amount' => 'NetAmount'
+                                // ];
+                                // foreach ($fields as $label => $field) {
+                                //     echo "
+                                //     <tr>
+                                //         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                //         <td class='trackerlabel'>" . $label . "</td>
+                                //         <td class='trackingspecs' " . 
+                                //             ($field === 'NetAmount' ? "style='color: red; font-weight: bold; text-align:left;'" : "") . 
+                                //             ($field === 'TrackingNumber' ? " id='tracknumid'" : "") . 
+                                //             ($field === 'Year' ? " id='yearid'" : "") . ">
+                                //             " . htmlspecialchars($newRecord[$field], ENT_QUOTES) . "
+                                //         </td>
+                                //     </tr>
+                                //     ";
+                                // }
+
+                                echo "
+                                    
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                        $projectname
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em; padding-bottom:1em'>
+                                        $location
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em; padding-bottom:1em'>
+                                        $brgy
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
+                                        <td class='trackingspecs' >
+                                            ".$duration."
+                                        </td>
+                                    </tr>
+                                    <tr style=''>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackingspecs' >
+                                            <div>
+                                            ".$datevisited." 
+                                        </td>
+                                    </tr>
+                                    " . $this->MyProjectDetailsgenerateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
+                                    " . $this->ImageContainer($trackingNumber,$trackingyear) . "
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                    <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
+                                        <div style='color:var(--first-color)'>Video Link </div>
+                                        <div style='margin-top:5px;'> $videolink </div>
+                                    </td>
+
+                                    </tr>";
+                                    
+                                echo "
+                            </tbody>
+                        </table>
+
+                        $cardHtml
+                        
+                    </div>
+                
+                </div>";
+            }
+
+            
+        }
+        
+    }
+
+
+
+    function ListofmyProjectDetails($trackingNumber,$newRecord,$trackingyear){
+        $newRecord = $this->searchTrackingNumber2022($trackingNumber,$trackingyear );
+        $numberRow = 1;
+        
+        if($newRecord['TrackingType'] == 'NF'){
+            $sql="select * from citydoc$trackingyear.infrauploads where trackingnumber = '$trackingNumber' ";
+            $result = $this->query($sql);
+            $videolink = '';
+            $datevisited = '';
+            while($data = $result->fetch_array()){
+                $type = $data['Type'];
+             
+                if($type == 'Video'){
+                    $filename = $data['Filename'];
+                    function convertToEmbedUrl($url) {
+                        // Extract video ID from YouTube short link or standard URL
+                        if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]+)/', $url, $matches) || 
+                            preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                            return 'https://www.youtube.com/embed/' . $matches[1];
+                        }
+                        return $url; // Return original if no match
+                    }
+                    
+                    $filename = convertToEmbedUrl($filename);
+                    
+                    $videolink = '<iframe width="100%" src="' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '" 
+                                             title="YouTube video player" frameborder="0" 
+                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                             allowfullscreen>
+                                  </iframe>';
+                }else if($type == 'Image'){
+                    $datevisited = $data['DateVisit'];
+                }
+
+                unset($data);
+            }
+            
+            // $sql="select * from citydoc$trackingyear.vouchercurrent where trackingnumber = '$trackingNumber'";
+            // $result = $this->query($sql);
+            // $data = $result->fetch_array();
+            // $expensecode = !empty($data['PR_AccountCode']) ? $data['PR_AccountCode'] : "";
+            // unset($data);
+
+            $sql="select * from citydoc$trackingyear.programcode where trackingnumberinfra = '$trackingNumber' and category = 'Infrastructure Project'";
+            $result = $this->query($sql);
+            $data = $result->fetch_array();
+            $projectname = !empty($data['Name']) ? $data['Name'] : "";
+            unset($data);
+            $progress = 0;
+            $sql="select * from citydoc$trackingyear.infra where trackingnumber = '$trackingNumber'";
+            $result = $this->query($sql);
+            $data = $result->fetch_array();
+            $location = $data['Location'];
+            $brgy = $data['Barangay'];
+            $progress =  $data['Progress'];
+            $duration = !empty($data['Duration']) ? $data['Duration'] : "";
+            unset($data);
+
+            $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
+            $result = $this->query($sql);
+
+            if($_SESSION['perm'] == '40'){
+                $cardHtml = '
+                <div class="project-team-card">
+                    <h2 class="project-team-title">Project Team</h2>
+                    <div class="project-team-section">';
+
+                // Define hardcoded roles
+                $hardcodedRoles = [
+                    "Programmer" => [],
+                    "Checker" => [],
+                    "Draftsman" => [],
+                    "Surveyor" => [],
+                    "Inspector" => []
+                ];
+                $employeeNum = '';
+                while ($row = $result->fetch_array()) {
+                    $role = $row['Function'];
+                    $member = $row['Name'];
+                    $employeeNum = $row['EmployeeNumber'];
+
+                    if (isset($hardcodedRoles[$role])) {
+                        $hardcodedRoles[$role][] = $member;
+                    }
+                }
+
+                foreach ($hardcodedRoles as $role => $members) {
+                    $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>' . htmlspecialchars($role) . '</span>
+                                     <button class="ri-edit-box-line" style="margin-left:.3rem;font-weight:bold;color:var(--text-color);"  
+                                        onclick="EditRole(\'' . htmlspecialchars($trackingNumber) . '\', \'' . htmlspecialchars($trackingyear) . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($employeeNum) . '\',listofprojectresults)">
+                                    </button>
+                                </div>';
+    
+                    
+                    if (!empty($members)) {
+                        $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
+                    } else {
+                        $cardHtml .= '<div class="project-members">-</div>'; 
+                    }
+                }
+
+                $cardHtml .= '
+                    </div>
+                </div>';
+
+                $status = $newRecord['Status'];
+                echo "
+                    <div>
+                        <div class='trackerheader' >
+                            <table border='0'>
+                                <tr>
+                                    <td>
+                                        <span class='tracker-title'>" . $status . "  
+                                           
+                                        </span>
+                                    </td>   
+                                    <td style='text-align:right;width:0px;'>
+                                     <button class='ri-edit-box-line' 
+                                                style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
+                                            onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", listofprojectresults)'>
+                                            </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan='2'>
+                                        <p class='tracker-office'>" . htmlspecialchars($newRecord['OfficeName'], ENT_QUOTES) . "</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class='tracker-details'>
+                        <table border='0'>
+                            <tbody>
+                                ";
+                                // $fields = [
+                                //     'TN' => 'TrackingNumber',
+                                //     'Fund Year' => 'Year',
+                                //     'Contructor' => 'Claimant',
+                                //     'Document' => 'DocumentType',
+                                //     'Fund' => 'Fund',
+                                //     'Net Amount' => 'NetAmount'
+                                // ];
+                                // foreach ($fields as $label => $field) {
+                                //     echo "
+                                //     <tr>
+                                //         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                //         <td class='trackerlabel'>" . $label . "</td>
+                                //         <td class='trackingspecs' " . 
+                                //             ($field === 'NetAmount' ? "style='color: red; font-weight: bold; text-align:left;'" : "") . 
+                                //             ($field === 'TrackingNumber' ? " id='tracknumid'" : "") . 
+                                //             ($field === 'Year' ? " id='yearid'" : "") . ">
+                                //             " . htmlspecialchars($newRecord[$field], ENT_QUOTES) . "
+                                //         </td>
+                                //     </tr>
+                                //     ";
+                                // }
+
+                                echo "
+                                    
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                        $projectname
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em; padding-bottom:1em'>
+                                        $location
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em; padding-bottom:1em'>
+                                        $brgy
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
+                                        <td class='trackingspecs' >
+                                            ".$duration."
+                                        </td>
+                                    </tr>
+                                    <tr style=''>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackingspecs' >
+                                            <div>
+                                            ".$datevisited." 
+                                        </td>
+                                    </tr>
+                                    " . $this->MyProjectDetailsgenerateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
+                                    " . $this->ImageContainer($trackingNumber,$trackingyear) . "
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                    <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
+                                        <div style='color:var(--first-color)'>Video Link </div>
+                                        <div style='margin-top:5px;'> $videolink </div>
+                                    </td>
+
+                                    </tr>";
+                                    
+                                echo "
+                            </tbody>
+                        </table>
+
+                        $cardHtml
+                        
+                    </div>
+                
+                </div>";
+            }
+
+            
+        }
+        
     }
 
 

@@ -75,7 +75,7 @@ require_once(ROOTER . 'includes/database.php');
     //     }
     //     return true; // If no mobile keywords found, it's NOT a mobile
     // }
-    
+    // var_dump( $_SESSION['CEOUser']);
 
 ?>
 <!DOCTYPE html>
@@ -145,11 +145,25 @@ require_once(ROOTER . 'includes/database.php');
                             <i class="ri-search-line"></i>
                             <span>Tracker</span>
                         </a>
-                        <a href="#" class="sidebar__link" onclick="showSection('AutoReceive-section')" 
-                        <?php echo ($_SESSION['perm'] == '40') ? 'style="display: none;"' : ''; ?>>
+
+                        <a href="#" class="sidebar__link" onclick="showSection('myprojects-section')">
+                            <i class="ri-task-line"></i>
+                            <span>My Projects</span>
+                        </a>
+
+                        <?php if (isset($_SESSION['CEOUser']) && $_SESSION['CEOUser'] === 'Checker'): ?>
+                            <a href="#" class="sidebar__link" onclick="showSection('listofprojects-section')">
+                                <i class="ri-list-check-3"></i>
+                                <span>List of Projects</span>
+                            </a>
+                        <?php endif; ?>
+
+                        <!-- <a href="#" class="sidebar__link" onclick="showSection('AutoReceive-section')" 
+                        <?php //echo ($_SESSION['perm'] == '40') ? 'style="display: none;"' : ''; ?>
+                        >
                             <i class="ri-qr-scan-2-line"></i>
                             <span>QR Auto Receive</span>
-                        </a>
+                        </a> -->
 
 
                     </div>
@@ -179,83 +193,11 @@ require_once(ROOTER . 'includes/database.php');
             <h1>Dashboard</h1>
             <p>Welcome to the dashboard overview.</p>
 
-            <div class="inspector-card">
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-                <div class="inspection-card">
-                    <div class="inspection-header">
-                        <h2>Inspection Required</h2>
-                    </div>
-                    <div class="inspection-body">
-                        <p><strong>User:</strong> John Doe</p>
-                        <p><strong>Status:</strong> Pending Inspection</p>
-                        <button class="inspection-btn">Inspect Now</button>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- Tracker Section -->
         <section id="Tracker-section" style="display: none;">
-            <div class="container" >
+            <div style="margin-inline:1rem;">
                 <!-- <h1>Tracker</h1> -->
                 <div class="search-container">
                     <select class="search-dropdown" id="yearInput">
@@ -265,54 +207,15 @@ require_once(ROOTER . 'includes/database.php');
                         <option value="2023">2023</option>
                         <option value="2022">2022</option>
                     </select>
-                    <input type="text" id="trackingNumberInput" class="search-input" placeholder="Search..." onkeypress="checkEnter(event)" value='8751-1'>
+                    <input type="text" id="trackingNumberInput" class="search-input" placeholder="Search..." onkeypress="checkEnter(event)">
                     <button class="search-button"><i class="fa fa-search" onclick="searchTracking()"></i></button>
                 </div>
 
-                <div style="max-height:73vh;overflow-x:hidden;overflow-y:auto;">
+                <div style="max-height:73vh;overflow-x:hidden;overflow-y:auto;" id='gusion'>
                     <div id="searchcontainer" class="tracker-results" ></div>
 
                 </div>
-                <!-- Modal InfraPDD UPLOADER -->
-                <div id="infrapddUploader" class="uploader-overlay" style="display:none;">
-                    <div class="uploader-content">
-                        <span class="close-btn" onclick="closeInfrapddUploader()">&times;</span>
-                        <h2>Pre-Construction Upload</h2>
-                        
-                        <?php if ($_SESSION['perm'] == '41') { ?>
-                            <label for="progress">Progress</label>
-                            <input type="number" id="progress" class="input-field" placeholder="Enter progress %">
-                        <?php } ?>
-
-                        <label for="infraUpFilePre">Upload Pictures</label>
-                        <input type="file" id="infraUpFilePre" class="input-field" multiple onchange="displayFileNames()">
-                        <!-- File Names Display Area -->
-                        <div id="fileNames" class="file-names"></div>
-
-
-                        <label for="infraVisitDatePre">Date Visited</label>
-                        <input id="infraVisitDatePre" type="date" class="input-field">
-
-
-                        <label for="infraVideoLinkPre">Video Link</label>
-                        <input type="url" id="infraVideoLinkPre" class="input-field" placeholder="Enter video link">
-
-                        <button class="btn btn-primary" onclick="saveInfraUploadPre()">Upload</button>
-                    </div>
-                </div>
-                
-                <div id="infrapddUploadervideo" class="uploader-overlay" style="display:none;">
-                    <div class="uploader-content">
-                        <span class="close-btn" onclick="closeInfrapddUploaderVideo()">&times;</span>
-                        <h2>Pre-Constructiom Video Link</h2>
-
-                        <label for="videoLink">Video Link</label>
-                        <input type="url" id="videoLink" class="input-field" placeholder="Enter video link">
-
-                        <button class="btn btn-primary">Save</button>
-                    </div>
-                </div>
-
+               
 
             </div>
         </section>
@@ -356,8 +259,389 @@ require_once(ROOTER . 'includes/database.php');
         </section>
 
 
+        <section id="myprojects-section" style="display:none;">
+            <div>
+                <div class="select-container" style="">
+                    <center><h1>My Projects</h1></center>
+             
+                    <div class="custom-select" >
+                        <select id="yearSelect" onchange="showSelectedYear()">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                        <span class="select-arrow">&#9662;</span>
+                    </div>
+                </div>
+
+           
+                <div id="mycardprojectresults" class="myproject-results">
+
+                </div>
+        
+                
+                
+            </div>
+        </section>
+
+
+        <section id="listofprojects-section" style="display:none;">
+            <div>
+                <div class="select-container">
+             
+
+                    <!-- <div class="custom-select" id="customSelect">
+                        <select id="listprojectyearSelect" onchange="showSelectedYearListofProject()">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                        <span class="select-arrow">&#9662;</span>
+                    </div> -->
+                        
+                    <!-- <div class="input-wrapper" onclick="focusInput()">
+                        <button class="icon ri-search-line"></button>
+                        <input placeholder="Search ..." class="input" name="text" type="text" id="searchProject" 
+                            onfocus="hideElements()" onblur="showElements()">
+                    </div> -->
+
+                    <div class="InputContainer">
+                        <input
+                            placeholder="Search"
+                            id="searchProject"
+                            class="input"
+                            name="text"
+                            type="text"
+                            onkeyup="filterProjects()"
+                        />
+
+                        <label class="labelforsearch ri-search-line" for="input">
+                            
+                        </label>
+                    </div>
+
+
+                    <i id="filterButton" class="ri-equalizer-line" onclick="toggleFilterProjects()"></i>
+
+                    <div class="filter-dropdown" id="filterDropdown">
+                    <div class="filter-header">
+                        <span>Filter</span>
+                        <button class="close-btn" onclick="toggleFilterProjects()">×</button>
+                    </div>
+
+
+
+                    <!-- Type Selection -->
+                    <div class="filter-group">
+                        <label>Year</label>
+                        <select id="listprojectyearSelect" onchange="showSelectedYearListofProject()">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Selection -->
+                    <!-- <div class="filter-group">
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="">Select Status</option>
+                            <option value="Done">✅ Done</option>
+                            <option value="In Progress">🔵 In Progress</option>
+                            <option value="Pending">🟠 Pending</option>
+                        </select>
+                    </div> -->
+
+                    <div class="filter-group">
+                        <label>Project Type</label>
+                        <select id="projecttype" onchange="filterProjects()">
+                            <option value=""></option>
+                            <option >Building</option>
+                            <option >Disaster Response and Rescue Equipment</option>
+                            <option >Flood Control Systems</option>
+                        </select>
+                    </div>
+
+
+                    <div class="filter-group">
+                        <label>Barangay</label>
+                        <select id="brgy">
+                            <option value=""></option>
+                            <option value="Done">✅ Done</option>
+                            <option value="In Progress">🔵 In Progress</option>
+                            <option value="Pending">🟠 Pending</option>
+                        </select>
+                    </div>
+                    
+                </div>
+
+        
+                </div>
+
+
+                
+
+
+                
+               
+                <span style="color:var(--title-color);font-weight:bold;">List of Projects</span>
+
+           
+                <div id="listofprojectresults" class="listofprojectresults">
+
+                </div>
+        
+                
+                
+            </div>
+
+              <!-- Filter Dropdown -->
+             
+        </section>
+
+
+        <!----------------------------- Modals Section ---------->
+
+        <div id="EditStatusModal" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditStatus()">&times;</span>
+                <h2>Edit Status</h2>
+
+                <!-- <label for="updatedstatus">Status</label> -->
+                <select id="updatedstatus" class="input-field">
+                    <option value="Project Encoded">Project Encoded</option>
+                    <option value="Requesting for Fund Certification">Requesting for Fund Certification</option>
+                    <option value="Acknowledge Certification Request">Acknowledge Certification Request</option>
+                    <option value="Fund Certification Signed">Fund Certification Signed</option>
+                    <option value="Schedule for Inspection">Schedule for Inspection</option>
+                    <option value="For Inspection">For Inspection</option>
+                    <option value="Inspected - Not Feasible">Inspected - Not Feasible</option>
+                    <option value="Preparation of Plans, PoW, and Detailed Estimates">Preparation of Plans, PoW, and Detailed Estimates</option>
+                    <option value="Plans, PoW, and Detailed Estimates for Approval">Plans, PoW, and Detailed Estimates for Approval</option>
+                    <option value="Plans, PoW, and Detailed Estimates Signed">Plans, PoW, and Detailed Estimates Signed</option>
+                    <option value="For BAC Procedures">For BAC Procedures</option>
+                    <option value="Drafting Invitation to Bid">Drafting Invitation to Bid</option>
+                    <option value="Checking Invitation to Bid">Checking Invitation to Bid</option>
+                    <option value="Invitation to Bid for Adjustment">Invitation to Bid for Adjustment</option>
+                    <option value="Invitation to Bid for Pick-up">Invitation to Bid for Pick-up</option>
+                    <option value="Invitation to Bid for Transmit">Invitation to Bid for Transmit</option>
+                    <option value="Invitation to Bid for Signature">Invitation to Bid for Signature</option>
+                    <option value="Invitation to Bid Signed">Invitation to Bid Signed</option>
+                    <option value="Posting">Posting</option>
+                    <option value="Bidding Schedule">Bidding Schedule</option>
+                    <option value="Post Qualification">Post Qualification</option>
+                    <option value="Letters for Signature">Letters for Signature</option>
+                    <option value="Letters Signed">Letters Signed</option>
+                    <option value="Notice of Award for Transmit">Notice of Award for Transmit</option>
+                    <option value="Notice of Award for Admin Signature">Notice of Award for Admin Signature</option>
+                    <option value="Notice of Award Admin Signed">Notice of Award Admin Signed</option>
+                    <option value="NoA and Contract for Contractor's Signature">NoA and Contract for Contractor's Signature</option>
+                    <option value="NoA and Contract Released to Contractor">NoA and Contract Released to Contractor</option>
+                    <option value="NoA and Contract Contractor Signed">NoA and Contract Contractor Signed</option>
+                    <option value="Obligation Request Preparation">Obligation Request Preparation</option>
+                    <option value="OBR for Implementing Office Signature">OBR for Implementing Office Signature</option>
+                    <option value="OBR Implementing Office Signed">OBR Implementing Office Signed</option>
+                    <option value="CBO Received">CBO Received</option>
+                    <option value="Pending at CBO">Pending at CBO</option>
+                    <option value="Pending Released - CBO">Pending Released - CBO</option>
+                    <option value="Obligation Request for Pick-up">Obligation Request for Pick-up</option>
+                    <option value="Obligation Request Signed">Obligation Request Signed</option>
+                    <option value="Contract and NTP for City Engineer's Signature">Contract and NTP for City Engineer's Signature</option>
+                    <option value="Contract and NTP Signed">Contract and NTP Signed</option>
+                    <option value="Document Filing">Document Filing</option>
+                    <option value="CAO Received">CAO Received</option>
+                    <option value="Pending at CAO">Pending at CAO</option>
+                    <option value="Pending Released - CAO">Pending Released - CAO</option>
+                    <option value="Document for Pick-up - CAO">Document for Pick-up - CAO</option>
+                    <option value="Contract and NTP Transmit to Admin">Contract and NTP Transmit to Admin</option>
+                    <option value="Contract and NTP for Admin Signature">Contract and NTP for Admin Signature</option>
+                    <option value="Pending at Admin">Pending at Admin</option>
+                    <option value="Pending Released - Admin">Pending Released - Admin</option>
+                    <option value="Document for Pick-up - Admin">Document for Pick-up - Admin</option>
+                    <option value="Contract for Notarization">Contract for Notarization</option>
+                    <option value="Released to Contractor for Notarization">Released to Contractor for Notarization</option>
+                    <option value="Contract Notarized">Contract Notarized</option>
+                    <option value="Prepare Letter for Pick-up NTP">Prepare Letter for Pick-up NTP</option>
+                    <option value="Forwarded Letter for Pick-up NTP">Forwarded Letter for Pick-up NTP</option>
+                    <option value="NTP Released to Contractor">NTP Released to Contractor</option>
+                    <option value="NTP Received from Contractor">NTP Received from Contractor</option>
+                    <option value="NTP Forwarded to Construction Division">NTP Forwarded to Construction Division</option>
+                </select>
+
+                <button class="btn btn-primary" onclick="UpdateStatus()">Update</button>
+            </div>
+        </div>
+
+
+
+        <!-- Modal InfraPDD UPLOADER -->
+        <div id="infrapddUploader" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeInfrapddUploader()">&times;</span>
+                <h2>Pre-Construction Upload</h2>
+                
+                <?php if ($_SESSION['perm'] == '41') { ?>
+                    <label for="progress">Progress</label>
+                    <input type="number" id="progress" class="input-field" placeholder="Enter progress %">
+                <?php } ?>
+
+                <label for="infraUpFilePre">Upload Pictures</label>
+                <input type="file" id="infraUpFilePre" class="input-field" multiple onchange="displayFileNames()">
+                <!-- File Names Display Area -->
+                <div id="fileNames" class="file-names"></div>
+
+
+                <label for="infraVisitDatePre">Date Visited</label>
+                <input id="infraVisitDatePre" type="date" class="input-field">
+
+
+                <label for="infraVideoLinkPre">Video Link</label>
+                <input type="url" id="infraVideoLinkPre" class="input-field" placeholder="Enter video link">
+
+                <button class="btn btn-primary" onclick="saveInfraUploadPre()">Upload</button>
+            </div>
+        </div>
+        
+        <div id="infrapddUploadervideo" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeInfrapddUploaderVideo()">&times;</span>
+                <h2>Pre-Constructiom Video Link</h2>
+
+                <label for="videoLink">Video Link</label>
+                <input type="url" id="videoLink" class="input-field" placeholder="Enter video link">
+
+                <button class="btn btn-primary">Save</button>
+            </div>
+        </div>
+
+        <div id="EditDateVisited" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditDateVisited()">&times;</span>
+                <h2>Edit Date Visited</h2>
+
+                <!-- <label for="editdatevisit">Date Visited</label> -->
+                <input type="date" id="editdatevisit" class="input-field" placeholder="Enter Date">
+
+                <button class="btn btn-primary" onclick="UpdatePreConDateVisit()">Update</button>
+            </div>
+        </div>
+
+        <div id="EditVideoLink" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditRole('EditVideoLink')">&times;</span>
+                <h2>Edit Video Link</h2>
+<!-- 
+                <label for="updatedvideolink">Video Link</label> -->
+                <input type="url" id="updatedvideolink" class="input-field" placeholder="Enter Video Link">
+
+                <button class="btn btn-primary" onclick="UpdateVideoLink()">Update</button>
+            </div>
+        </div>
+        
+
+        <div id="EditLocation" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditLocation()">&times;</span>
+                <h2>Edit Location</h2>
+
+                <!-- <label for="updatedlocation">Location</label> -->
+                <input type="text" id="updatedlocation" class="input-field" placeholder="Enter Location">
+
+                <button class="btn btn-primary" onclick="UpdateLocation()">Update</button>
+            </div>
+        </div>
+
+
+
+        <div id="Editbrgymodal" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditBrgy()">&times;</span>
+                <h2>Edit Barangay</h2>
+
+                <!-- <label for="updatedbrgy">Barangay</label> -->
+                <input type="text" id="updatedbrgy" class="input-field" placeholder="Enter Barangay">
+
+                <button class="btn btn-primary" onclick="UpdateBrgy()">Update</button>
+            </div>
+        </div>
+
+        <!----------------------------- Modals Section END---------->
+
 
     </main>
+
+    <div class="inspector-card" style="display:none;">
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Status</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                    <div class="inspection-card">
+                        <div class="inspection-header">
+                            <h2>Inspection Required</h2>
+                        </div>
+                        <div class="inspection-body">
+                            <p><strong>User:</strong> John Doe</p>
+                            <p><strong>Status:</strong> Pending Inspection</p>
+                            <button class="inspection-btn">Inspect Now</button>
+                        </div>
+                    </div>
+                </div>
 
     <!--=============== MAIN JS ===============-->
     <script src="assets/js/main.js"></script>
@@ -367,7 +651,125 @@ require_once(ROOTER . 'includes/database.php');
 <script>
     // document.getElementById("trackerclicksection").click();
     // alert(document.getElementById("Tracker-section").textContent);
-  
+    // function toggleFilterProjects() {
+    //     const dropdown = document.getElementById("filterDropdown");
+    //     dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    // }
+
+    function toggleFilterProjects() {
+        const dropdown = document.getElementById("filterDropdown");
+        const filterButton = document.getElementById("filterButton");
+
+        // Toggle the dropdown visibility
+        if (dropdown.style.display === "block") {
+            dropdown.style.display = "none";
+        } else {
+            dropdown.style.display = "block";
+        }
+
+        // Close the dropdown if clicked outside of it
+        const closeDropdown = function(event) {
+            if (!dropdown.contains(event.target) && event.target !== filterButton) {
+                dropdown.style.display = "none";
+                // Remove the event listener after closing the dropdown
+                document.removeEventListener('click', closeDropdown);
+            }
+        };
+
+        // Add the event listener to close the dropdown if clicked outside
+        document.addEventListener('click', closeDropdown);
+    }
+
+
+    function hideElements() {
+        document.getElementById("title").style.display = "none";
+        document.getElementById("customSelect").style.display = "none";
+    }
+
+    function showElements() {
+        document.getElementById("title").style.display = "flex";
+        document.getElementById("customSelect").style.display = "flex";
+    }
+
+    function focusInput() {
+        document.getElementById("searchProject").focus();
+    }
+
+    function myProjectDetails(trackingNumber) {
+        var trackyear = document.getElementById("yearSelect").value;
+
+        var queryString = "?myprojectdetails=1&trackingyear=" + trackyear + "&trackingNumber=" + trackingNumber;
+        var container = document.getElementById('mycardprojectresults');
+        loader(container);
+        ajaxGetAndConcatenate(queryString, processorLink, container, "myprojectdetails");
+
+    }
+
+    function ListofmyProjectDetails(trackingNumber) {
+        var trackyear = document.getElementById("listprojectyearSelect").value;
+
+        var queryString = "?ListofmyProjectDetails=1&trackingyear=" + trackyear + "&trackingNumber=" + trackingNumber;
+        var container = document.getElementById('listofprojectresults');
+        loader(container);
+        ajaxGetAndConcatenate(queryString, processorLink, container, "ListofmyProjectDetails");
+
+    }
+
+
+    function showSelectedYear() {
+        let employeeNumber = "<?php echo $_SESSION['employeeNumber']; ?>";
+        let selectedYear = document.getElementById("yearSelect").value;
+
+        var queryString = "?myprojectresults=1&trackingyear=" + selectedYear + "&employeeNumber=" + employeeNumber;
+        var container = document.getElementById('mycardprojectresults');
+        loader(container);
+        ajaxGetAndConcatenate(queryString, processorLink, container, "myprojectresults");
+
+    }
+
+    function showSelectedYearListofProject() {
+        let employeeNumber = "<?php echo $_SESSION['employeeNumber']; ?>";
+        let selectedYear = document.getElementById("listprojectyearSelect").value;
+        var container = document.getElementById('listofprojectresults');
+        loader(container);
+        var queryString = "?listofprojectresults=1&trackingyear=" + selectedYear + "&employeeNumber=" + employeeNumber;
+
+        ajaxGetAndConcatenate(queryString, processorLink, container, "listofprojectresults", function() {
+            // Ensure the filter applies after loading new results
+            filterProjects();
+        });
+    }
+
+
+    // function filterProjects() {
+    //     let input = document.getElementById("searchProject").value.toLowerCase();
+    //     let projects = document.querySelectorAll("#listofprojectresults .myproject-card");
+
+    //     projects.forEach(project => {
+    //         let text = project.textContent.toLowerCase();
+    //         project.style.display = text.includes(input) ? "" : "none";
+    //     });
+    // }
+
+    function filterProjects() {
+        const dropdown = document.getElementById("filterDropdown");
+        let input = document.getElementById("searchProject").value.toLowerCase();
+        let projectType = document.getElementById("projecttype").value.toLowerCase();
+        let projects = document.querySelectorAll("#filtercard ");
+
+        projects.forEach(project => {
+            let text = project.textContent.toLowerCase();
+
+            // Check if the project text includes the search input and if the project type matches the selected option
+            let matchesText = text.includes(input);
+            let matchesType = projectType ? text.includes(projectType) : true;
+
+            project.style.display = (matchesText && matchesType) ? "" : "none";
+        });
+
+        dropdown.style.display = "none";
+    }
+
     function loader(container) {
         // const container = document.getElementById('searchcontainer');
         container.innerHTML = `
@@ -459,6 +861,15 @@ require_once(ROOTER . 'includes/database.php');
             if (toggleButton) {
                 toggleButton.click();
             }
+        }
+
+
+        if (sectionId === "myprojects-section") {
+            showSelectedYear();
+        }
+
+        if (sectionId === "listofprojects-section") {
+            showSelectedYearListofProject();
         }
     }
 
@@ -610,6 +1021,72 @@ require_once(ROOTER . 'includes/database.php');
         document.getElementById("infrapddUploadervideo").style.display = "none";
     }
 
+
+    function openEditDateVisited(trackingNumber,trackingyear) {
+        document.getElementById("EditDateVisited").style.display = "block";
+    }
+
+
+    function closeEditDateVisited(trackingNumber) {
+        document.getElementById("EditDateVisited").style.display = "none";
+    }
+
+    function openEditVideoLink(trackingNumber,trackingyear) {
+        document.getElementById("EditVideoLink").style.display = "block";
+    }
+
+
+    function openEditLocation(trackingNumber,trackingyear) {
+        document.getElementById("EditLocation").style.display = "block";
+    }
+
+
+    function closeEditLocation(trackingNumber) {
+        document.getElementById("EditLocation").style.display = "none";
+    }
+
+    function openEditBrgy(trackingNumber,trackingyear) {
+        document.getElementById("Editbrgymodal").style.display = "block";
+    }
+
+
+    function closeEditBrgy(trackingNumber) {
+        document.getElementById("Editbrgymodal").style.display = "none";
+    }
+
+    function closeEditRole(modalID) {
+        document.getElementById(modalID).style.display = "none";
+    }
+
+    function openEditStatus(trackingNumber, trackingYear, status,container) {
+        window.selectedContainer = container;
+        // alert(window.selectedContainer);
+        document.getElementById("EditStatusModal").style.display = "block";
+
+        let dropdown = document.getElementById("updatedstatus");
+        dropdown.value = status;
+    }
+
+    function closeEditStatus(trackingNumber,trackingyear,status) {
+        document.getElementById("EditStatusModal").style.display = "none";
+    }
+
+    function UpdateStatus() {
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        let selectedStatus = document.getElementById("updatedstatus").value;
+
+        // container = document.getElementById('searchcontainer');
+        var container = window.selectedContainer ;
+        var containername = container.id;
+        loader(container);
+        var queryString = "?UpdateStatus=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&status=" + selectedStatus + "&container=" + containername;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateStatus");
+
+    }
+
+
     function displayFileNames() {
         const input = document.getElementById('infraUpFilePre');
         const fileNamesContainer = document.getElementById('fileNames');
@@ -742,6 +1219,103 @@ require_once(ROOTER . 'includes/database.php');
         }
     }
 
+    function UpdatePreConDateVisit(){
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var datevisit = document.getElementById('editdatevisit').value;
+
+        container = document.getElementById('searchcontainer');
+        loader(container);
+        var queryString = "?UpdatePreConDateVisit=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&datevisit=" + datevisit;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"UpdatePreConDateVisit");
+    }
+
+    function UpdateLocation(){
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var location = document.getElementById('updatedlocation').value;
+
+        container = document.getElementById('searchcontainer');
+        loader(container);
+        var queryString = "?UpdateLocation=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&location=" + location;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateLocation");
+    }
+
+    function UpdateVideoLink(){
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var videolink = document.getElementById('updatedvideolink').value;
+
+        container = document.getElementById('searchcontainer');
+        loader(container);
+        var queryString = "?Updatevideolink=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&videolink=" + videolink;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"Updatevideolink");
+    }
+
+    function UpdateBrgy(){
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var brgy = document.getElementById('updatedbrgy').value;
+
+        container = document.getElementById('searchcontainer');
+        loader(container);
+        var queryString = "?UpdateBrgy=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&brgy=" + brgy;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateBrgy");
+    }
+
+    function EditRole(trackingNumber,trackingyear,role,employeeNum,container){
+
+        // alert(container)
+        // container = document.getElementById('searchcontainer');
+        var queryString = "?editprogrammer=1&trackingNumber=" + trackingNumber + "&trackingyear=" + trackingyear + "&role=" + role + "&employeeNumber=" + employeeNum + "&container=" + container.id;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"editprogrammer");
+
+     
+    }
+
+
+    function assignProgrammers(trackingNumber, trackingyear, role,employeenum,fullname,namecontainer) {
+        var selectedProgrammers = [];
+        var allProgrammers = [];
+        var checkboxes = document.querySelectorAll("#programmerList input[type='checkbox']");
+        
+        var containername = namecontainer;
+        // alert(namecontainer);
+        checkboxes.forEach((checkbox) => {
+            var employeeNum = checkbox.getAttribute("data-empnum");
+            var fullName = checkbox.value;
+            var programmerData = encodeURIComponent(fullName) + "~" + encodeURIComponent(employeeNum);
+
+            allProgrammers.push(programmerData); // All programmers (checked or unchecked)
+
+            if (checkbox.checked) {
+                selectedProgrammers.push(programmerData); // Only checked programmers
+            }
+        });
+
+        var queryString = "?assignprogrammer=1" +
+                        "&trackingNumber=" + encodeURIComponent(trackingNumber) +
+                        "&trackingyear=" + encodeURIComponent(trackingyear) +
+                        "&role=" + encodeURIComponent(role) +
+                        "&selectedProgrammers=" + selectedProgrammers.join("|") +
+                        "&allProgrammers=" + allProgrammers.join("|");
+
+        var container = document.getElementById(containername);
+        loader(container);
+        ajaxGetAndConcatenate(queryString, processorLink, container, "assignprogrammer");
+    }
+
+
+
+
+
+ // container = document.getElementById('searchcontainer');
+            // var queryString = "?assignprogrammer=1&trackingNumber=" + trackingNumber + "&trackingyear=" + trackingyear + "&role=" + role + "&employeeNumber=" + employeeNum;
+            // ajaxGetAndConcatenate(queryString,processorLink,container,"assignprogrammer");
 
     document.addEventListener("DOMContentLoaded", function () {
         var currentYear = new Date().getFullYear(); // Get current year
@@ -754,17 +1328,18 @@ require_once(ROOTER . 'includes/database.php');
 
 
     
-    function openModal(src) {
+    function openModalImage(src) {
         const modal = document.getElementById("imageModal");
         const fullImage = document.getElementById("fullImage");
         fullImage.src = src;
         modal.style.display = "flex"; 
     }
 
-    function closeModal() {
+    function closeModalImage() {
         document.getElementById("imageModal").style.display = "none";
     }
 
+    
 
 
 </script>

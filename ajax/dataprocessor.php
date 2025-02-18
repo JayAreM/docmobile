@@ -79,6 +79,8 @@
 					$officeName = $data['Name'];
 					$firstName = $data['FirstName'];
 					$lastName = $data['LastName'];
+					$ceouser = $data['CEOUser'];
+					$_SESSION['CEOUser'] = $ceouser;
 					$_SESSION['officeCode'] = $data['OfficeCode'];
 					$_SESSION['gso'] = $data['OfficeCode'];
 					$_SESSION['cbo'] = $data['OfficeCode'];
@@ -660,6 +662,895 @@
 		
 	}
 
+
+	if(isset($_GET['UpdatePreConDateVisit'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$datevisit = $database->charEncoder($_GET['datevisit']);
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.infrauploads set DateVisit = '" . $datevisit . "' where trackingNumber  = '" . $trackingNumber . "' ";
+		$database->query($sql);
+
+		echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+	}
+
+
+	if(isset($_GET['UpdateLocation'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$location = $database->charEncoder($_GET['location']);
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.infra set Location = '" . $location . "' where trackingNumber  = '" . $trackingNumber . "' ";
+		$database->query($sql);
+
+		echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+
+	}
+
+	if(isset($_GET['Updatevideolink'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$videolink = $database->charEncoder($_GET['videolink']);
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.infrauploads set Filename = '" . $videolink . "' where trackingNumber  = '" . $trackingNumber . "'  and Type = 'Video'";
+		$database->query($sql);
+
+		echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+
+	}
+	if(isset($_GET['UpdateStatus'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$status = $database->charEncoder($_GET['status']);
+		$container = $database->charEncoder($_GET['container']);
+		// echo $container;
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.vouchercurrent set Status = '" . $status . "' where trackingNumber  = '" . $trackingNumber . "' ";
+		$database->query($sql);
+
+		if($container == 'searchcontainer'){
+			echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+		}else if ($container == 'mycardprojectresults'){
+			echo $sheet->MyProjectDetails($trackingNumber,$newRecord,$trackingyear );
+		}else if ($container == 'listofprojectresults'){
+			echo $sheet->MyProjectDetails($trackingNumber,$newRecord,$trackingyear );
+		}
+	}
+
+	if(isset($_GET['UpdateBrgy'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$brgy = $database->charEncoder($_GET['brgy']);
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.infra set Barangay = '" . $brgy . "' where trackingNumber  = '" . $trackingNumber . "' ";
+		$database->query($sql);
+
+		echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+
+	}
+
+	if(isset($_GET['editprogrammer'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$container = $database->charEncoder($_GET['container']);
+		$role = $database->charEncoder($_GET['role']);
+		if($role == 'Programmer'){
+			$sql = "
+					SELECT i.LastName, i.FirstName, i.Suffix, i.EmployeeNumber, i.MiddleName, i.Title,
+						pm.EmployeeNumber AS Assigned, pm.Function
+					FROM citydoc$trackingyear.inframanpower i
+					LEFT JOIN citydoc$trackingyear.projectmanpower pm
+					ON i.EmployeeNumber = pm.EmployeeNumber 
+					AND pm.TrackingNumber = '$trackingNumber'
+					AND pm.Function = 'Programmer' where i.Type = 'Infra'
+					group by i.EmployeeNumber 
+					ORDER BY i.LastName, i.FirstName ASC
+				";
+
+				$result = $database->query($sql);
+
+				$programmerListHtml = "";
+
+				// Generate checkboxes dynamically
+				if ($result->num_rows > 0) {
+					while ($row = $result->fetch_array()) {
+
+						$empnum = $row['EmployeeNumber'];
+						$lname = $row['LastName'];
+						$fname = $row['FirstName'];
+						$mname = $row['MiddleName'];
+						$suff = $row['Suffix'];
+						$title = $row['Title'];
+						$manFunct = $row['Function'];
+
+						if(strlen(trim($mname)) > 0) {
+							$mname = $row['MiddleName'][0].".";
+						}
+
+						if(strlen(trim($suff)) > 0) {
+							$suff = ", ".$row['Suffix'];
+						}
+						
+						$fullName = $lname.' '.$fname.' '.$mname.$suff;
+		
+						$id = "programmer_" . md5($fullName); // Unique ID for each checkbox
+						$empNum = $row["EmployeeNumber"];
+
+						// If Assigned is not NULL, the checkbox should be checked
+						$checked = $row["Assigned"] !== null ? "checked" : "";
+
+						// $programmerListHtml .= '<div style="display:flex;align-items:center;">
+						// 	<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+						// 		data-empnum="' . htmlspecialchars($empNum) . '" style="">
+						// 	<label for="' . $id . '" style="margin-left:.3rem; cursor:pointer;">' . htmlspecialchars($fullName) . '</label>
+						// </div>';
+
+						$programmerListHtml .= '
+							<table border="0">
+								<tr>
+								<td style="vertical-align:top;width:1px;padding-top:0.21rem;">
+									<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+									data-empnum="' . htmlspecialchars($empNum) . '" style="">
+								</td> 
+								<td style="padding-left:.3rem;">
+									<label for="' . $id . '" style=" cursor:pointer;text-align:left;font-size:1.1em;">' . htmlspecialchars($fullName) . '</label>
+								</td>
+								</tr>
+							</table>';
+					}
+				} else {
+					$programmerListHtml = "<p>No programmers found.</p>";
+				}
+
+			echo '<div id="editprogrammerModal" class="uploader-overlay">
+					<div class="uploader-content">
+						<span class="close-btn" onclick="closeEditRole(\'editprogrammerModal\')">&times;</span>
+						<h2>Assign Programmer</h2>
+
+						<div id="programmerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 2px 5px;font-size:1em;">
+							' . $programmerListHtml . '
+						</div>
+
+						<button class="btn btn-primary" onclick="assignProgrammers(\'' . $trackingNumber . '\', \'' . $trackingyear . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($empNum) . '\',\'' . htmlspecialchars($fullName) . '\',\'' . htmlspecialchars($container) . '\')">Assign</button>
+					</div>
+			</div>';
+		}
+
+
+		if($role == 'Checker'){
+			$sql = "
+					SELECT i.LastName, i.FirstName, i.Suffix, i.EmployeeNumber, i.MiddleName, i.Title,
+						pm.EmployeeNumber AS Assigned, pm.Function
+					FROM citydoc$trackingyear.inframanpower i
+					LEFT JOIN citydoc$trackingyear.projectmanpower pm
+					ON i.EmployeeNumber = pm.EmployeeNumber 
+					AND pm.TrackingNumber = '$trackingNumber'
+					AND pm.Function = 'Checker' where i.Type = 'Infra'
+					group by i.EmployeeNumber 
+					ORDER BY i.LastName, i.FirstName ASC
+				";
+
+				$result = $database->query($sql);
+
+				$programmerListHtml = "";
+
+				// Generate checkboxes dynamically
+				if ($result->num_rows > 0) {
+					while ($row = $result->fetch_array()) {
+
+						$empnum = $row['EmployeeNumber'];
+						$lname = $row['LastName'];
+						$fname = $row['FirstName'];
+						$mname = $row['MiddleName'];
+						$suff = $row['Suffix'];
+						$title = $row['Title'];
+						$manFunct = $row['Function'];
+
+						if(strlen(trim($mname)) > 0) {
+							$mname = $row['MiddleName'][0].".";
+						}
+
+						if(strlen(trim($suff)) > 0) {
+							$suff = ", ".$row['Suffix'];
+						}
+						
+						$fullName = $lname.' '.$fname.' '.$mname.$suff;
+		
+						$id = "programmer_" . md5($fullName); // Unique ID for each checkbox
+						$empNum = $row["EmployeeNumber"];
+
+						// If Assigned is not NULL, the checkbox should be checked
+						$checked = $row["Assigned"] !== null ? "checked" : "";
+
+						// $programmerListHtml .= '<div style="display:flex;align-items:center;">
+						// 	<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+						// 		data-empnum="' . htmlspecialchars($empNum) . '" style="">
+						// 	<label for="' . $id . '" style="margin-left:.3rem; cursor:pointer;">' . htmlspecialchars($fullName) . '</label>
+						// </div>';
+
+						$programmerListHtml .= '
+							<table border="0">
+								<tr>
+								<td style="vertical-align:top;width:1px;padding: top 0.21em;rem;">
+									<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+									data-empnum="' . htmlspecialchars($empNum) . '" style="">
+								</td> 
+								<td style="padding-left:.3rem;">
+									<label for="' . $id . '" style=" cursor:pointer;text-align:left;font-size:1.1em;">' . htmlspecialchars($fullName) . '</label>
+								</td>
+								</tr>
+							</table>';
+					}
+				} else {
+					$programmerListHtml = "<p>No programmers found.</p>";
+				}
+
+			echo '<div id="editprogrammerModal" class="uploader-overlay">
+					<div class="uploader-content">
+						<span class="close-btn" onclick="closeEditRole(\'editprogrammerModal\')">&times;</span>
+						<h2>Assign Programmer</h2>
+
+						<div id="programmerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 2px 5px;font-size:1em;">
+							' . $programmerListHtml . '
+						</div>
+
+						<button class="btn btn-primary" onclick="assignProgrammers(\'' . $trackingNumber . '\', \'' . $trackingyear . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($empNum) . '\',\'' . htmlspecialchars($fullName) . '\',\'' . htmlspecialchars($container) . '\')">Assign</button>
+					</div>
+			</div>';
+		}
+
+		if($role == 'Draftsman'){
+			$sql = "
+					SELECT i.LastName, i.FirstName, i.Suffix, i.EmployeeNumber, i.MiddleName, i.Title,
+						pm.EmployeeNumber AS Assigned, pm.Function
+					FROM citydoc$trackingyear.inframanpower i
+					LEFT JOIN citydoc$trackingyear.projectmanpower pm
+					ON i.EmployeeNumber = pm.EmployeeNumber 
+					AND pm.TrackingNumber = '$trackingNumber'
+					AND pm.Function = 'Draftsman' where i.Type = 'Infra'
+					group by i.EmployeeNumber 
+					ORDER BY i.LastName, i.FirstName ASC
+				";
+
+				$result = $database->query($sql);
+
+				$programmerListHtml = "";
+
+				// Generate checkboxes dynamically
+				if ($result->num_rows > 0) {
+					while ($row = $result->fetch_array()) {
+
+						$empnum = $row['EmployeeNumber'];
+						$lname = $row['LastName'];
+						$fname = $row['FirstName'];
+						$mname = $row['MiddleName'];
+						$suff = $row['Suffix'];
+						$title = $row['Title'];
+						$manFunct = $row['Function'];
+
+						if(strlen(trim($mname)) > 0) {
+							$mname = $row['MiddleName'][0].".";
+						}
+
+						if(strlen(trim($suff)) > 0) {
+							$suff = ", ".$row['Suffix'];
+						}
+						
+						$fullName = $lname.' '.$fname.' '.$mname.$suff;
+		
+						$id = "programmer_" . md5($fullName); // Unique ID for each checkbox
+						$empNum = $row["EmployeeNumber"];
+
+						// If Assigned is not NULL, the checkbox should be checked
+						$checked = $row["Assigned"] !== null ? "checked" : "";
+
+						// $programmerListHtml .= '<div style="display:flex;align-items:center;">
+						// 	<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+						// 		data-empnum="' . htmlspecialchars($empNum) . '" style="">
+						// 	<label for="' . $id . '" style="margin-left:.3rem; cursor:pointer;">' . htmlspecialchars($fullName) . '</label>
+						// </div>';
+
+						$programmerListHtml .= '
+							<table border="0">
+								<tr>
+								<td style="vertical-align:top;width:1px;padding: top 0.21em;rem;">
+									<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+									data-empnum="' . htmlspecialchars($empNum) . '" style="">
+								</td> 
+								<td style="padding-left:.3rem;">
+									<label for="' . $id . '" style=" cursor:pointer;text-align:left;font-size:1.1em;">' . htmlspecialchars($fullName) . '</label>
+								</td>
+								</tr>
+							</table>';
+					}
+				} else {
+					$programmerListHtml = "<p>No programmers found.</p>";
+				}
+
+			echo '<div id="editprogrammerModal" class="uploader-overlay">
+					<div class="uploader-content">
+						<span class="close-btn" onclick="closeEditRole(\'editprogrammerModal\')">&times;</span>
+						<h2>Assign Programmer</h2>
+
+						<div id="programmerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 2px 5px;font-size:1em;">
+							' . $programmerListHtml . '
+						</div>
+
+						<button class="btn btn-primary" onclick="assignProgrammers(\'' . $trackingNumber . '\', \'' . $trackingyear . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($empNum) . '\',\'' . htmlspecialchars($fullName) . '\',\'' . htmlspecialchars($container) . '\')">Assign</button>
+					</div>
+			</div>';
+		}
+
+		if($role == 'Surveyor'){
+			$sql = "
+					SELECT i.LastName, i.FirstName, i.Suffix, i.EmployeeNumber, i.MiddleName, i.Title,
+						pm.EmployeeNumber AS Assigned, pm.Function
+					FROM citydoc$trackingyear.inframanpower i
+					LEFT JOIN citydoc$trackingyear.projectmanpower pm
+					ON i.EmployeeNumber = pm.EmployeeNumber 
+					AND pm.TrackingNumber = '$trackingNumber'
+					AND pm.Function = 'Surveyor' where i.Type = 'Infra'
+					group by i.EmployeeNumber 
+					ORDER BY i.LastName, i.FirstName ASC
+				";
+
+				$result = $database->query($sql);
+
+				$programmerListHtml = "";
+
+				// Generate checkboxes dynamically
+				if ($result->num_rows > 0) {
+					while ($row = $result->fetch_array()) {
+
+						$empnum = $row['EmployeeNumber'];
+						$lname = $row['LastName'];
+						$fname = $row['FirstName'];
+						$mname = $row['MiddleName'];
+						$suff = $row['Suffix'];
+						$title = $row['Title'];
+						$manFunct = $row['Function'];
+
+						if(strlen(trim($mname)) > 0) {
+							$mname = $row['MiddleName'][0].".";
+						}
+
+						if(strlen(trim($suff)) > 0) {
+							$suff = ", ".$row['Suffix'];
+						}
+						
+						$fullName = $lname.' '.$fname.' '.$mname.$suff;
+		
+						$id = "programmer_" . md5($fullName); // Unique ID for each checkbox
+						$empNum = $row["EmployeeNumber"];
+
+						// If Assigned is not NULL, the checkbox should be checked
+						$checked = $row["Assigned"] !== null ? "checked" : "";
+
+						// $programmerListHtml .= '<div style="display:flex;align-items:center;">
+						// 	<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+						// 		data-empnum="' . htmlspecialchars($empNum) . '" style="">
+						// 	<label for="' . $id . '" style="margin-left:.3rem; cursor:pointer;">' . htmlspecialchars($fullName) . '</label>
+						// </div>';
+
+						$programmerListHtml .= '
+							<table border="0">
+								<tr>
+								<td style="vertical-align:top;width:1px;padding: top 0.21em;rem;">
+									<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+									data-empnum="' . htmlspecialchars($empNum) . '" style="">
+								</td> 
+								<td style="padding-left:.3rem;">
+									<label for="' . $id . '" style=" cursor:pointer;text-align:left;font-size:1.1em;">' . htmlspecialchars($fullName) . '</label>
+								</td>
+								</tr>
+							</table>';
+					}
+				} else {
+					$programmerListHtml = "<p>No programmers found.</p>";
+				}
+
+			echo '<div id="editprogrammerModal" class="uploader-overlay">
+					<div class="uploader-content">
+						<span class="close-btn" onclick="closeEditRole(\'editprogrammerModal\')">&times;</span>
+						<h2>Assign Programmer</h2>
+
+						<div id="programmerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 2px 5px;font-size:1em;">
+							' . $programmerListHtml . '
+						</div>
+
+						<button class="btn btn-primary" onclick="assignProgrammers(\'' . $trackingNumber . '\', \'' . $trackingyear . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($empNum) . '\',\'' . htmlspecialchars($fullName) . '\',\'' . htmlspecialchars($container) . '\')">Assign</button>
+					</div>
+			</div>';
+		}
+
+		if($role == 'Inspector'){
+			$sql = "
+					SELECT i.LastName, i.FirstName, i.Suffix, i.EmployeeNumber, i.MiddleName, i.Title,
+						pm.EmployeeNumber AS Assigned, pm.Function
+					FROM citydoc$trackingyear.inframanpower i
+					LEFT JOIN citydoc$trackingyear.projectmanpower pm
+					ON i.EmployeeNumber = pm.EmployeeNumber 
+					AND pm.TrackingNumber = '$trackingNumber'
+					AND pm.Function = 'Inspector' where i.Type = 'Infra'
+					group by i.EmployeeNumber 
+					ORDER BY i.LastName, i.FirstName ASC
+				";
+
+				$result = $database->query($sql);
+
+				$programmerListHtml = "";
+
+				// Generate checkboxes dynamically
+				if ($result->num_rows > 0) {
+					while ($row = $result->fetch_array()) {
+
+						$empnum = $row['EmployeeNumber'];
+						$lname = $row['LastName'];
+						$fname = $row['FirstName'];
+						$mname = $row['MiddleName'];
+						$suff = $row['Suffix'];
+						$title = $row['Title'];
+						$manFunct = $row['Function'];
+
+						if(strlen(trim($mname)) > 0) {
+							$mname = $row['MiddleName'][0].".";
+						}
+
+						if(strlen(trim($suff)) > 0) {
+							$suff = ", ".$row['Suffix'];
+						}
+						
+						$fullName = $lname.' '.$fname.' '.$mname.$suff;
+		
+						$id = "programmer_" . md5($fullName); // Unique ID for each checkbox
+						$empNum = $row["EmployeeNumber"];
+
+						// If Assigned is not NULL, the checkbox should be checked
+						$checked = $row["Assigned"] !== null ? "checked" : "";
+
+						// $programmerListHtml .= '<div style="display:flex;align-items:center;">
+						// 	<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+						// 		data-empnum="' . htmlspecialchars($empNum) . '" style="">
+						// 	<label for="' . $id . '" style="margin-left:.3rem; cursor:pointer;">' . htmlspecialchars($fullName) . '</label>
+						// </div>';
+
+						$programmerListHtml .= '
+							<table border="0">
+								<tr>
+								<td style="vertical-align:top;width:1px;padding: top 0.21em;rem;">
+									<input id="' . $id . '" type="checkbox" name="programmer" value="' . htmlspecialchars($fullName) . '" ' . $checked . ' 
+									data-empnum="' . htmlspecialchars($empNum) . '" style="">
+								</td> 
+								<td style="padding-left:.3rem;">
+									<label for="' . $id . '" style=" cursor:pointer;text-align:left;font-size:1.1em;">' . htmlspecialchars($fullName) . '</label>
+								</td>
+								</tr>
+							</table>';
+					}
+				} else {
+					$programmerListHtml = "<p>No programmers found.</p>";
+				}
+
+			echo '<div id="editprogrammerModal" class="uploader-overlay">
+					<div class="uploader-content">
+						<span class="close-btn" onclick="closeEditRole(\'editprogrammerModal\')">&times;</span>
+						<h2>Assign Programmer</h2>
+
+						<div id="programmerList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 2px 5px;font-size:1em;">
+							' . $programmerListHtml . '
+						</div>
+
+						<button class="btn btn-primary" onclick="assignProgrammers(\'' . $trackingNumber . '\', \'' . $trackingyear . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($empNum) . '\',\'' . htmlspecialchars($fullName) . '\',\'' . htmlspecialchars($container) . '\')">Assign</button>
+					</div>
+			</div>';
+		}
+		
+
+	}
+
+
+	if (isset($_GET['assignprogrammer'])) {
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$role = $database->charEncoder($_GET['role']);
+	
+		if($role == 'Programmer'){
+	
+			// Get selected (checked) programmers
+			$selectedRaw = isset($_GET['selectedProgrammers']) && !empty($_GET['selectedProgrammers']) 
+						? explode("|", $_GET['selectedProgrammers']) 
+						: [];
+		
+			// Step 1: Delete all previously assigned programmers for the same TrackingNumber & Function
+			$deleteSql = "DELETE FROM citydoc" . $trackingyear . ".projectmanpower 
+						WHERE TrackingNumber = '$trackingNumber' AND `Function` = 'Programmer'";
+			$database->query($deleteSql);
+		
+			// Step 2: Insert newly selected programmers
+			if (!empty($selectedRaw)) {
+				$inserts = "";
+				foreach ($selectedRaw as $programmer) {
+					list($fullName, $empNum) = explode("~", $programmer);
+					$fullName = $database->charEncoder($fullName);
+					$empNum = $database->charEncoder($empNum);
+		
+					$inserts .= ", ('$trackingNumber', '$empNum', '$fullName', 'Programmer')";
+				}
+		
+				if (!empty($inserts)) {
+					$sql = "INSERT INTO citydoc" . $trackingyear . ".projectmanpower 
+							(TrackingNumber, EmployeeNumber, Name, `Function`) 
+							VALUES " . substr($inserts, 1);
+					$database->query($sql);
+				}
+			}
+
+			// echo '123123';
+		}
+
+		if($role == 'Checker'){
+	
+			// Get selected (checked) programmers
+			$selectedRaw = isset($_GET['selectedProgrammers']) && !empty($_GET['selectedProgrammers']) 
+						? explode("|", $_GET['selectedProgrammers']) 
+						: [];
+		
+			// Step 1: Delete all previously assigned programmers for the same TrackingNumber & Function
+			$deleteSql = "DELETE FROM citydoc" . $trackingyear . ".projectmanpower 
+						WHERE TrackingNumber = '$trackingNumber' AND `Function` = 'Checker'";
+			$database->query($deleteSql);
+		
+			// Step 2: Insert newly selected programmers
+			if (!empty($selectedRaw)) {
+				$inserts = "";
+				foreach ($selectedRaw as $programmer) {
+					list($fullName, $empNum) = explode("~", $programmer);
+					$fullName = $database->charEncoder($fullName);
+					$empNum = $database->charEncoder($empNum);
+		
+					$inserts .= ", ('$trackingNumber', '$empNum', '$fullName', 'Checker')";
+				}
+		
+				if (!empty($inserts)) {
+					$sql = "INSERT INTO citydoc" . $trackingyear . ".projectmanpower 
+							(TrackingNumber, EmployeeNumber, Name, `Function`) 
+							VALUES " . substr($inserts, 1);
+					$database->query($sql);
+				}
+			}
+		}
+
+		if($role == 'Draftsman'){
+	
+			// Get selected (checked) programmers
+			$selectedRaw = isset($_GET['selectedProgrammers']) && !empty($_GET['selectedProgrammers']) 
+						? explode("|", $_GET['selectedProgrammers']) 
+						: [];
+		
+			// Step 1: Delete all previously assigned programmers for the same TrackingNumber & Function
+			$deleteSql = "DELETE FROM citydoc" . $trackingyear . ".projectmanpower 
+						WHERE TrackingNumber = '$trackingNumber' AND `Function` = 'Draftsman'";
+			$database->query($deleteSql);
+		
+			// Step 2: Insert newly selected programmers
+			if (!empty($selectedRaw)) {
+				$inserts = "";
+				foreach ($selectedRaw as $programmer) {
+					list($fullName, $empNum) = explode("~", $programmer);
+					$fullName = $database->charEncoder($fullName);
+					$empNum = $database->charEncoder($empNum);
+		
+					$inserts .= ", ('$trackingNumber', '$empNum', '$fullName', 'Draftsman')";
+				}
+		
+				if (!empty($inserts)) {
+					$sql = "INSERT INTO citydoc" . $trackingyear . ".projectmanpower 
+							(TrackingNumber, EmployeeNumber, Name, `Function`) 
+							VALUES " . substr($inserts, 1);
+					$database->query($sql);
+				}
+			}
+		}
+
+		if($role == 'Surveyor'){
+	
+			// Get selected (checked) programmers
+			$selectedRaw = isset($_GET['selectedProgrammers']) && !empty($_GET['selectedProgrammers']) 
+						? explode("|", $_GET['selectedProgrammers']) 
+						: [];
+		
+			// Step 1: Delete all previously assigned programmers for the same TrackingNumber & Function
+			$deleteSql = "DELETE FROM citydoc" . $trackingyear . ".projectmanpower 
+						WHERE TrackingNumber = '$trackingNumber' AND `Function` = 'Surveyor'";
+			$database->query($deleteSql);
+		
+			// Step 2: Insert newly selected programmers
+			if (!empty($selectedRaw)) {
+				$inserts = "";
+				foreach ($selectedRaw as $programmer) {
+					list($fullName, $empNum) = explode("~", $programmer);
+					$fullName = $database->charEncoder($fullName);
+					$empNum = $database->charEncoder($empNum);
+		
+					$inserts .= ", ('$trackingNumber', '$empNum', '$fullName', 'Surveyor')";
+				}
+		
+				if (!empty($inserts)) {
+					$sql = "INSERT INTO citydoc" . $trackingyear . ".projectmanpower 
+							(TrackingNumber, EmployeeNumber, Name, `Function`) 
+							VALUES " . substr($inserts, 1);
+					$database->query($sql);
+				}
+			}
+		}
+
+		if($role == 'Inspector'){
+	
+			// Get selected (checked) programmers
+			$selectedRaw = isset($_GET['selectedProgrammers']) && !empty($_GET['selectedProgrammers']) 
+						? explode("|", $_GET['selectedProgrammers']) 
+						: [];
+		
+			// Step 1: Delete all previously assigned programmers for the same TrackingNumber & Function
+			$deleteSql = "DELETE FROM citydoc" . $trackingyear . ".projectmanpower 
+						WHERE TrackingNumber = '$trackingNumber' AND `Function` = 'Inspector'";
+			$database->query($deleteSql);
+		
+			// Step 2: Insert newly selected programmers
+			if (!empty($selectedRaw)) {
+				$inserts = "";
+				foreach ($selectedRaw as $programmer) {
+					list($fullName, $empNum) = explode("~", $programmer);
+					$fullName = $database->charEncoder($fullName);
+					$empNum = $database->charEncoder($empNum);
+		
+					$inserts .= ", ('$trackingNumber', '$empNum', '$fullName', 'Inspector')";
+				}
+		
+				if (!empty($inserts)) {
+					$sql = "INSERT INTO citydoc" . $trackingyear . ".projectmanpower 
+							(TrackingNumber, EmployeeNumber, Name, `Function`) 
+							VALUES " . substr($inserts, 1);
+					$database->query($sql);
+				}
+			}
+		}
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+		echo $sheet->ListofmyProjectDetails($trackingNumber,$newRecord,$trackingyear );
+		// echo '12312';
+	}
+	
+	
+	
+	
+	if (isset($_GET['myprojectresults'])) {
+		$employeeNumber = $database->charEncoder($_GET['employeeNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+
+		$sql = "SELECT 
+					pm.TrackingNumber, 
+					vc.PR_AccountCode, 
+					ft.title, 
+					pc.name,
+					pc.amount, 
+					vc.NetAmount,
+					vc.status,
+					ir.Barangay
+				FROM citydoc$trackingyear.projectmanpower pm
+				LEFT JOIN citydoc$trackingyear.vouchercurrent vc 
+					ON pm.TrackingNumber = vc.TrackingNumber
+				LEFT JOIN citydoc$trackingyear.fundtitles ft 
+					ON vc.PR_AccountCode = ft.Code
+				LEFT JOIN citydoc$trackingyear.programcode pc
+					ON pm.TrackingNumber = pc.TrackingNumberInfra
+				LEFT JOIN citydoc$trackingyear.infra ir
+					ON pm.TrackingNumber = ir.TrackingNumber
+				WHERE pm.EmployeeNumber = '$employeeNumber'";
+	
+		$result = $database->query($sql);
+	
+		$sheet = '';
+		if ($result->num_rows > 0) {
+			
+			$counter = 1; 
+
+			while ($row = $result->fetch_assoc()) {
+				$projectName = htmlspecialchars($row['name']); 
+				$trackingNumber = htmlspecialchars($row['TrackingNumber']); 
+				$projectType = htmlspecialchars($row['title']); 
+				$brgy = htmlspecialchars($row['Barangay']);
+				$status = htmlspecialchars($row['status']); 
+				$amount = number_format($row['amount'], 2);
+
+				$sheet .= '<div class="myproject-card" style="margin-top:.7rem;">
+							<table  border="0">
+								<tr>
+									<td style="vertical-align:top;text-align:right;padding-top:.05rem;padding-right:.3rem;width:0px;"><span style="font-size:var(--tiny-normal-size);color:var(--text-color);font-weight:bold;">' . $counter++ . '</span></td>
+									<td colspan="0" style="text-align:right;vertical-align:top;color: var(--title-color);">
+										<span style="color: orange;font-weight:bold;font-size:1.15em;">TN </span> <span id="myprojecttrackid" style="font-weight:bold;font-size:1.15em;">' . $trackingNumber . '</span>
+									</td>
+								</tr>
+
+								<tr>
+									<td></td>
+									
+									<td>
+										<div style="color: var(--title-color);font-size: 1.05em; margin-bottom: 0.3rem;font-weight:bold;"><span style="color: var(--first-color);font-weight:normal;">Project Name:</span> ' . $projectName . '</div>
+									</td>
+								</tr>
+								
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Project Type:</span> ' . $projectType . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Barangay:</span> ' . $brgy . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Status:</span> ' . $status . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight: bold; font-size: 1.05em;margin-bottom: 0.3rem;">
+											<span style="color: var(--first-color);font-weight:normal;">Amount:</span> ' . $amount . '
+										</div>
+									</td>
+								</tr>
+							</table>
+							<div style="text-align: right; margin-top: .5rem;">
+								<span type="button" class="action" onclick="myProjectDetails(\'' . $trackingNumber . '\')">See Details</span>
+							</div>
+						</div>';
+			}
+			
+		} else {
+			$sheet .= '<p>No projects found.</p>';
+		}
+
+		echo $sheet;
+	}
+
+
+	if (isset($_GET['listofprojectresults'])) {
+		$employeeNumber = $database->charEncoder($_GET['employeeNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+
+		$sql = "SELECT 
+					vc.PR_AccountCode, 
+					ft.title, 
+					pc.name,
+					pc.amount, 
+					vc.NetAmount,
+					vc.status,
+					ir.*
+				FROM citydoc$trackingyear.infra ir
+				LEFT JOIN citydoc$trackingyear.vouchercurrent vc 
+					ON ir.TrackingNumber = vc.TrackingNumber
+				LEFT JOIN citydoc$trackingyear.fundtitles ft 
+					ON vc.PR_AccountCode = ft.Code
+				LEFT JOIN citydoc$trackingyear.programcode pc
+					ON ir.TrackingNumber = pc.TrackingNumberInfra
+				where status != 'Cancelled';";
+	
+		$result = $database->query($sql);
+	
+		$sheet = '';
+		if ($result->num_rows > 0) {
+			
+			$counter = 1; 
+
+			while ($row = $result->fetch_assoc()) {
+				$projectName = htmlspecialchars($row['name']); 
+				$trackingNumber = htmlspecialchars($row['TrackingNumber']); 
+				$projectType = htmlspecialchars($row['title']); 
+				$brgy = htmlspecialchars($row['Barangay']); 
+				$status = htmlspecialchars($row['status']); 
+				$amount = number_format($row['amount'], 2);
+
+				$sheet .= '<div id="filtercard" class="myproject-card" style="margin-top:.7rem;">
+							<table  border="0">
+								<tr >
+									<td style="vertical-align:top;text-align:right;padding-top:.05rem;padding-right:.3rem;width:0px;"><span style="font-size:var(--tiny-normal-size);color:var(--text-color);font-weight:bold;">' . $counter++ . '</span></td>
+									<td colspan="0" style="text-align:right;vertical-align:top;color: var(--title-color);padding-bottom:.8rem;">
+										<span style="color: orange;font-weight:bold;font-size:1.2em;">TN </span> <span id="myprojecttrackid" style="font-weight:bold;font-size:1.2em;">' . $trackingNumber . '</span>
+									</td>
+								</tr>
+
+								<tr >
+									<td></td>
+									
+									<td>
+										<div style="color: var(--title-color);font-size: 1.05em; margin-bottom: 0.3rem;font-weight:bold;"><span style="color: var(--first-color);font-weight:normal;">Project Name:</span> ' . $projectName . '</div>
+									</td>
+								</tr>
+								
+								<tr >
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Project Type:</span> ' . $projectType . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Barangay:</span> ' . $brgy . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight:bold;margin-bottom: 0.3rem;font-size: 1.05em;">
+											<span style="color: var(--first-color);font-weight:normal;">Status:</span> ' . $status . '
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td colspan="0">
+										<div style="color: var(--title-color); font-weight: bold; font-size: 1.05em;margin-bottom: 0.3rem;">
+											<span style="color: var(--first-color);font-weight:normal;">Amount:</span> ' . $amount . '
+										</div>
+									</td>
+								</tr>
+							</table>
+							<div style="text-align: right; margin-top: .5rem;">
+								<span type="button" class="action" onclick="ListofmyProjectDetails(\'' . $trackingNumber . '\')">See Details</span>
+							</div>
+						</div>';
+			}
+			
+		} else {
+			$sheet .= '<p>No projects found.</p>';
+		}
+
+		echo $sheet;
+	}
+
+	if (isset($_GET['myprojectdetails'])) {
+
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear);
+
+		echo $sheet->MyProjectDetails($trackingNumber, $newRecord,$trackingyear);
+		
+	}
+
+	if (isset($_GET['ListofmyProjectDetails'])) {
+
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear);
+
+		echo $sheet->ListofmyProjectDetails($trackingNumber, $newRecord,$trackingyear);
+		
+	}
 	
 ?>
 

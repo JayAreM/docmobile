@@ -54,6 +54,70 @@
 						}else if(ajaxType == "searchTrackingNumberQR"){ 
 							// loader();
 							container.innerHTML = result;
+						}else if(ajaxType == "myprojectresults"){ 
+							// loader();
+							container.innerHTML = result;
+						}else if(ajaxType == "listofprojectresults"){ 
+							// loader();
+							container.innerHTML = result;
+						}else if(ajaxType == "ListofmyProjectDetails"){ 
+							// loader();
+							container.innerHTML = result;
+						}else if(ajaxType == "myprojectdetails"){ 
+							// loader();
+							container.innerHTML = result;
+						}else if(ajaxType == "UpdatePreConDateVisit"){ 
+							// loader();
+							
+							container.innerHTML = result;
+							document.getElementById('EditDateVisited').style.display = 'none';
+						}else if(ajaxType == "UpdateLocation"){ 
+							// loader();	
+							container.innerHTML = result;
+							document.getElementById('EditLocation').style.display = 'none';
+						}else if(ajaxType == "Updatevideolink"){ 
+							// loader();	
+							container.innerHTML = result;
+							document.getElementById('EditVideoLink').style.display = 'none';
+						}else if(ajaxType == "UpdateStatus"){ 
+							// loader();	
+							container.innerHTML = result;
+							document.getElementById('EditStatusModal').style.display = 'none';
+						}else if(ajaxType == "UpdateBrgy"){ 
+							// loader();			
+							container.innerHTML = result;
+							document.getElementById('Editbrgymodal').style.display = 'none';
+						}else if(ajaxType == "editprogrammer"){ 
+							// loader();			
+							// Remove existing modal before adding a new one
+							let existingModal = document.getElementById("editprogrammerModal");
+							if (existingModal) {
+								existingModal.remove(); // Remove old modal to avoid duplication
+							}
+
+							// Append new modal content
+							container.insertAdjacentHTML("beforeend", result);
+
+							// Reattach event listeners for buttons inside the new modal
+							setTimeout(() => {
+								let modal = document.getElementById("editprogrammerModal");
+
+								if (modal) {
+									// Close button event listener
+									modal.querySelector(".close-btn").addEventListener("click", () => {
+										modal.style.display = "none"; // Hide modal when closing
+									});
+
+									// Ensure the modal is displayed
+									modal.style.display = "block";
+								}
+							}, 100);
+
+						}else if(ajaxType == "assignprogrammer"){ 
+							// loader();			
+							// alert(container.id);
+							container.innerHTML = result;
+							// document.getElementById('editprogrammerModal').style.display = 'none';
 						}else if(ajaxType == "receiveTrackingNumberQR"){ 
 							// loader();
 							container.innerHTML = result;

@@ -728,6 +728,28 @@
 
 	}
 
+
+	if(isset($_GET['UpdateCoordinates'])){
+		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
+		$trackingyear = $database->charEncoder($_GET['trackingyear']);
+		$coordinates = $database->charEncoder($_GET['coordinates']);
+		$container = $database->charEncoder($_GET['container']);
+
+		$newRecord = $database->searchTrackingNumber2022($trackingNumber,$trackingyear );
+
+		$sql = "Update  citydoc$trackingyear.infra set Coordinates = '" . $coordinates . "' where trackingNumber  = '" . $trackingNumber . "' ";
+		$database->query($sql);
+		// echo $container;
+		if($container == 'searchcontainer'){
+			echo $sheet->CreateTrackerInterfaceResult($trackingNumber,$newRecord,$trackingyear );
+		}else if($container == 'mycardprojectresults'){
+			echo $sheet->MyProjectDetails($trackingNumber,$newRecord,$trackingyear );
+		}else if($container == 'listofprojectresults'){
+			echo $sheet->ListofmyProjectDetails($trackingNumber,$newRecord,$trackingyear );
+		}
+
+	}
+
 	if(isset($_GET['Updatevideolink'])){
 		$trackingNumber = $database->charEncoder($_GET['trackingNumber']);
 		$trackingyear = $database->charEncoder($_GET['trackingyear']);

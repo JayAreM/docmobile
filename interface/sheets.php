@@ -1286,12 +1286,14 @@ class Sheets extends MySQLDatabase {
                 }
 
                 foreach ($hardcodedRoles as $role => $members) {
-                    $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>' . htmlspecialchars($role) . '</span>
-                                    
-                                </div>';
-    
-                    
+                        $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>' . htmlspecialchars($role) . '</span>
+                        <button class="ri-edit-box-line" style="margin-left:.3rem;font-weight:bold;color:var(--text-color);"  
+                            onclick="EditRole(\'' . htmlspecialchars($trackingNumber) . '\', \'' . htmlspecialchars($trackingyear) . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($employeeNum) . '\',mycardprojectresults)">
+                        </button>
+                    </div>';
+
+            
                     if (!empty($members)) {
                         $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
                     } else {

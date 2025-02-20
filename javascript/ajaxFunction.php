@@ -60,6 +60,8 @@
 						}else if(ajaxType == "listofprojectresults"){ 
 							// loader();
 							container.innerHTML = result;
+							
+
 						}else if(ajaxType == "ListofmyProjectDetails"){ 
 							// loader();
 							container.innerHTML = result;
@@ -71,6 +73,16 @@
 							
 							container.innerHTML = result;
 							document.getElementById('EditDateVisited').style.display = 'none';
+						}else if(ajaxType == "UpdateCoordinates"){ 
+							// loader();
+							
+							container.innerHTML = result;
+							document.getElementById('EditCoordinatesModal').style.display = 'none';
+						}else if(ajaxType == "UpdateMap"){ 
+							// loader();
+							
+							container.innerHTML = result;
+							document.getElementById('EditMapModal').style.display = 'none';
 						}else if(ajaxType == "UpdateLocation"){ 
 							// loader();	
 							container.innerHTML = result;

@@ -151,7 +151,7 @@ require_once(ROOTER . 'includes/database.php');
                             <span>My Projects</span>
                         </a>
 
-                        <?php if (isset($_SESSION['CEOUser']) && $_SESSION['CEOUser'] === 'Checker'): ?>
+                        <?php if (isset($_SESSION['CEOCHECKER']) && $_SESSION['CEOCHECKER'] == '1'): ?>
                             <a href="#" class="sidebar__link" onclick="showSection('listofprojects-section')">
                                 <i class="ri-list-check-3"></i>
                                 <span>List of Projects</span>
@@ -275,7 +275,7 @@ require_once(ROOTER . 'includes/database.php');
                 </div>
 
            
-                <div id="mycardprojectresults" class="myproject-results">
+                <div id="mycardprojectresults" class="myproject-results" style="border-top:2px solid var(--shadow-color);">
 
                 </div>
         
@@ -321,7 +321,7 @@ require_once(ROOTER . 'includes/database.php');
                     </div>
 
 
-                    <i id="filterButton" class="ri-equalizer-line" onclick="toggleFilterProjects()"></i>
+                    <i id="filterButton" class="ri-equalizer-line" onclick="toggleFilterProjects()" style="font-size:1.7em;margin-left:.8rem;"></i>
 
                     <div class="filter-dropdown" id="filterDropdown">
                     <div class="filter-header">
@@ -359,19 +359,44 @@ require_once(ROOTER . 'includes/database.php');
                             <option >Building</option>
                             <option >Disaster Response and Rescue Equipment</option>
                             <option >Flood Control Systems</option>
+                            <option >Hospitals and Health Center</option>
+                            <option >Information and Communication Technology Equipment</option>
+                            <option >Other Infrastructure Asset</option>
+                            <option >Other Land Improvement</option>
+                            <option >Other Structures</option>
+                            <option >Power Supply System</option>
+                            <option >Road Networks</option>
+                            <option >School Buildings</option>
+                            <option >Subsidy to NGAs</option>
+                            <option >Water Supply</option>
+
                         </select>
                     </div>
 
 
                     <div class="filter-group">
                         <label>Barangay</label>
-                        <select id="brgy">
+                        <select id="brgyfilter" onchange="filterProjects()">
                             <option value=""></option>
-                            <option value="Done">✅ Done</option>
-                            <option value="In Progress">🔵 In Progress</option>
-                            <option value="Pending">🟠 Pending</option>
+                            <?php
+                            $sqlbrgy = "SELECT DISTINCT Barangay FROM allforone.district where barangay is not null or barangay != '' ORDER BY Barangay ASC";
+                            $result = $database->query($sqlbrgy);
+
+                            while ($rowd = $result->fetch_assoc()) {
+                                echo "<option value='" . htmlspecialchars($rowd['Barangay']) . "'>" . htmlspecialchars($rowd['Barangay']) . "</option>";
+                            }
+                            ?>
+                            
                         </select>
                     </div>
+
+
+                     <!-- Action Buttons -->
+                    <div class="filter-actions">
+                        <button class="reset-btn" onclick="resetFilters()">Clear</button>
+                    </div>
+
+
                     
                 </div>
 
@@ -384,7 +409,7 @@ require_once(ROOTER . 'includes/database.php');
 
                 
                
-                <span style="color:var(--title-color);font-weight:bold;">List of Projects</span>
+
 
            
                 <div id="listofprojectresults" class="listofprojectresults">
@@ -475,7 +500,7 @@ require_once(ROOTER . 'includes/database.php');
 
 
         <!-- Modal InfraPDD UPLOADER -->
-        <div id="infrapddUploader" class="uploader-overlay" style="display:none;">
+        <div id="infrapddUploaderModal" class="uploader-overlay" style="display:none;">
             <div class="uploader-content">
                 <span class="close-btn" onclick="closeInfrapddUploader()">&times;</span>
                 <h2>Pre-Construction Upload</h2>
@@ -523,6 +548,30 @@ require_once(ROOTER . 'includes/database.php');
                 <input type="date" id="editdatevisit" class="input-field" placeholder="Enter Date">
 
                 <button class="btn btn-primary" onclick="UpdatePreConDateVisit()">Update</button>
+            </div>
+        </div>
+
+        <div id="EditCoordinatesModal" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditCoordinates()">&times;</span>
+                <h2>Edit Coordinates</h2>
+
+                <!-- <label for="editdatevisit">Date Visited</label> -->
+                <input type="text" id="editcoordinates" class="input-field" placeholder="Enter Coordinates">
+
+                <button class="btn btn-primary" onclick="UpdateCoordinates()">Update</button>
+            </div>
+        </div>
+
+        <div id="EditMapModal" class="uploader-overlay" style="display:none;">
+            <div class="uploader-content">
+                <span class="close-btn" onclick="closeEditMap()">&times;</span>
+                <h2>Edit Map</h2>
+
+                <!-- <label for="editdatevisit">Date Visited</label> -->
+                <input type="text" id="editmap" class="input-field" placeholder="Enter Map url">
+
+                <button class="btn btn-primary" onclick="UpdateMap()">Update</button>
             </div>
         </div>
 
@@ -647,7 +696,7 @@ require_once(ROOTER . 'includes/database.php');
     <script src="assets/js/main.js"></script>
 
 </body>
-<script src="../javascript/html5-qrcode.min1xxx.js"></script>
+<!-- <script src="../javascript/html5-qrcode.min1xxx.js"></script> -->
 <script>
     // document.getElementById("trackerclicksection").click();
     // alert(document.getElementById("Tracker-section").textContent);
@@ -655,6 +704,12 @@ require_once(ROOTER . 'includes/database.php');
     //     const dropdown = document.getElementById("filterDropdown");
     //     dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
     // }
+
+    function resetFilters() {
+        document.getElementById("projecttype").value = "";
+        document.getElementById("brgyfilter").value = "";
+        filterProjects();
+    }
 
     function toggleFilterProjects() {
         const dropdown = document.getElementById("filterDropdown");
@@ -681,19 +736,19 @@ require_once(ROOTER . 'includes/database.php');
     }
 
 
-    function hideElements() {
-        document.getElementById("title").style.display = "none";
-        document.getElementById("customSelect").style.display = "none";
-    }
+    // function hideElements() {
+    //     document.getElementById("title").style.display = "none";
+    //     document.getElementById("customSelect").style.display = "none";
+    // }
 
-    function showElements() {
-        document.getElementById("title").style.display = "flex";
-        document.getElementById("customSelect").style.display = "flex";
-    }
+    // function showElements() {
+    //     document.getElementById("title").style.display = "flex";
+    //     document.getElementById("customSelect").style.display = "flex";
+    // }
 
-    function focusInput() {
-        document.getElementById("searchProject").focus();
-    }
+    // function focusInput() {
+    //     document.getElementById("searchProject").focus();
+    // }
 
     function myProjectDetails(trackingNumber) {
         var trackyear = document.getElementById("yearSelect").value;
@@ -728,6 +783,7 @@ require_once(ROOTER . 'includes/database.php');
     }
 
     function showSelectedYearListofProject() {
+        const dropdown = document.getElementById("filterDropdown");
         let employeeNumber = "<?php echo $_SESSION['employeeNumber']; ?>";
         let selectedYear = document.getElementById("listprojectyearSelect").value;
         var container = document.getElementById('listofprojectresults');
@@ -738,6 +794,7 @@ require_once(ROOTER . 'includes/database.php');
             // Ensure the filter applies after loading new results
             filterProjects();
         });
+        dropdown.style.display = "none";
     }
 
 
@@ -751,24 +808,56 @@ require_once(ROOTER . 'includes/database.php');
     //     });
     // }
 
+    // function filterProjects() {
+    //     const dropdown = document.getElementById("filterDropdown");
+    //     let input = document.getElementById("searchProject").value.toLowerCase();
+    //     let projectType = document.getElementById("projecttype").value.toLowerCase();
+    //     let projects = document.querySelectorAll("#filtercard");
+
+    //     projects.forEach(project => {
+    //         let text = project.textContent.toLowerCase();
+
+    //         // Check if the project text includes the search input and if the project type matches the selected option
+    //         let matchesText = text.includes(input);
+    //         let matchesType = projectType ? text.includes(projectType) : true;
+
+    //         project.style.display = (matchesText && matchesType) ? "" : "none";
+    //     });
+
+    //     dropdown.style.display = "none";
+    // }
+
+
     function filterProjects() {
-        const dropdown = document.getElementById("filterDropdown");
-        let input = document.getElementById("searchProject").value.toLowerCase();
-        let projectType = document.getElementById("projecttype").value.toLowerCase();
-        let projects = document.querySelectorAll("#filtercard ");
+    const dropdown = document.getElementById("filterDropdown");
+    let input = document.getElementById("searchProject").value.toLowerCase();
+    let projectType = document.getElementById("projecttype").value.toLowerCase();
+    let brgyfilter = document.getElementById("brgyfilter").value.toLowerCase();
+    let projects = document.querySelectorAll("#filtercard");
+    let counters = document.querySelectorAll(".numbercounter"); // Get all counters
 
-        projects.forEach(project => {
-            let text = project.textContent.toLowerCase();
+    let visibleCount = 0; // Start counter for visible projects
 
-            // Check if the project text includes the search input and if the project type matches the selected option
-            let matchesText = text.includes(input);
-            let matchesType = projectType ? text.includes(projectType) : true;
+    projects.forEach((project, index) => {
+        let text = project.textContent.toLowerCase();
 
-            project.style.display = (matchesText && matchesType) ? "" : "none";
-        });
+        let matchesText = text.includes(input);
+        let matchesType = projectType ? text.includes(projectType) : true;
+        let matchesBarangay = brgyfilter ? text.includes(brgyfilter) : true;
 
-        dropdown.style.display = "none";
-    }
+        if (matchesText && matchesType && matchesBarangay) {
+            project.style.display = ""; // Show project
+            visibleCount++; // Increment visible count
+            counters[index].textContent = visibleCount; // Update counter dynamically
+        } else {
+            project.style.display = "none"; // Hide project
+        }
+    });
+
+    dropdown.style.display = "none"; // Hide dropdown after filtering
+}
+
+
 
     function loader(container) {
         // const container = document.getElementById('searchcontainer');
@@ -856,12 +945,12 @@ require_once(ROOTER . 'includes/database.php');
         }
 
         // Check if the screen width is below 768px (mobile)
-        if (window.innerWidth <= 768) {
-            const toggleButton = document.getElementById("header-toggle");
-            if (toggleButton) {
-                toggleButton.click();
-            }
-        }
+        // if (window.innerWidth <= 768) {
+        //     const toggleButton = document.getElementById("header-toggle");
+        //     if (toggleButton) {
+        //         toggleButton.click();
+        //     }
+        // }
 
 
         if (sectionId === "myprojects-section") {
@@ -872,6 +961,64 @@ require_once(ROOTER . 'includes/database.php');
             showSelectedYearListofProject();
         }
     }
+
+//     document.addEventListener("DOMContentLoaded", function () {
+//         const toggleButton = document.getElementById("header-toggle");
+
+//         if (toggleButton) {
+//             // Detect clicks outside the button
+//             document.addEventListener("click", function (event) {
+//                 if (!toggleButton.contains(event.target)) {
+//                     // Simulate a click to "toggle off"
+//                     toggleButton.click();
+//                 }
+//             });
+
+//             // Prevent closing when clicking the button itself
+//             toggleButton.addEventListener("click", function (event) {
+//                 event.stopPropagation();
+//             });
+//         }
+//     });
+
+//     document.addEventListener("DOMContentLoaded", function () {
+//     const toggleButton = document.getElementById("header-toggle");
+
+//     if (toggleButton) {
+//         toggleButton.addEventListener("click", function (event) {
+//             this.classList.toggle("active"); // Toggle button state
+//             event.stopPropagation(); // Prevent closing immediately
+//         });
+
+//         document.addEventListener("click", function (event) {
+//             if (!toggleButton.contains(event.target)) {
+//                 toggleButton.classList.remove("active"); // Close if clicking outside
+//             }
+//         });
+//     }
+
+// });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleButton = document.getElementById("header-toggle");
+
+        if (toggleButton) {
+            toggleButton.addEventListener("click", function (event) {
+                this.classList.toggle("active"); // Toggle active state
+                event.stopPropagation(); // Prevent immediate closing
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!toggleButton.contains(event.target)) {
+                    if (toggleButton.classList.contains("active")) {
+                        toggleButton.click(); // Simulate click to toggle off
+                    }
+                }
+            });
+        }
+    });
+
 
 
 
@@ -999,21 +1146,21 @@ require_once(ROOTER . 'includes/database.php');
 
 
 
-
-
     // Function to open the uploader
-    function openInfrapddUploader(trackingNumber,trackingyear) {
-        document.getElementById("infrapddUploader").style.display = "block";
+    function openInfrapddUploader(trackingNumber,trackingyear,container) {
+        document.getElementById("infrapddUploaderModal").style.display = "block";
+        document.querySelector("#infrapddUploaderModal .btn-primary").setAttribute("onclick", `saveInfraUploadPre("${container}")`);
     }
 
     // Function to close the uploader
     function closeInfrapddUploader(trackingNumber) {
-        document.getElementById("infrapddUploader").style.display = "none";
+        document.getElementById("infrapddUploaderModal").style.display = "none";
     }
 
     // Function to open the uploader
     function openInfrapddUploaderVideo(trackingNumber,trackingyear) {
         document.getElementById("infrapddUploadervideo").style.display = "block";
+        
     }
 
     // Function to close the uploader
@@ -1022,8 +1169,32 @@ require_once(ROOTER . 'includes/database.php');
     }
 
 
-    function openEditDateVisited(trackingNumber,trackingyear) {
+    function openEditDateVisited(trackingNumber,trackingyear,container) {
         document.getElementById("EditDateVisited").style.display = "block";
+
+        document.querySelector("#EditDateVisited .btn-primary").setAttribute("onclick", `UpdatePreConDateVisit("${container}")`);
+    }
+
+    function openEditCoordinates(trackingNumber,trackingyear,container) {
+        document.getElementById("EditCoordinatesModal").style.display = "block";
+
+        document.querySelector("#EditCoordinatesModal .btn-primary").setAttribute("onclick", `UpdateCoordinates("${container}")`);
+    }
+
+    function closeEditCoordinates(trackingNumber) {
+        document.getElementById("EditCoordinatesModal").style.display = "none";
+    }
+
+
+    function openEditMap(trackingNumber,trackingyear,container) {
+        document.getElementById("EditMapModal").style.display = "block";
+
+        document.querySelector("#EditMapModal .btn-primary").setAttribute("onclick", `UpdateMap("${container}")`);
+    }
+
+
+    function closeEditMap(trackingNumber) {
+        document.getElementById("EditMapModal").style.display = "none";
     }
 
 
@@ -1031,13 +1202,24 @@ require_once(ROOTER . 'includes/database.php');
         document.getElementById("EditDateVisited").style.display = "none";
     }
 
-    function openEditVideoLink(trackingNumber,trackingyear) {
+
+    function openEditVideoLink(trackingNumber,trackingyear,container) {
         document.getElementById("EditVideoLink").style.display = "block";
+
+        document.querySelector("#EditVideoLink .btn-primary").setAttribute("onclick", `UpdateVideoLink("${container}")`);
     }
 
 
-    function openEditLocation(trackingNumber,trackingyear) {
+    // function openEditLocation(trackingNumber,trackingyear,container) {
+    //     document.getElementById("EditLocation").style.display = "block";
+    //     alert(container);
+    // }
+
+    function openEditLocation(trackingNumber, trackingYear, container) {
         document.getElementById("EditLocation").style.display = "block";
+
+        // Set the container value dynamically in the Update button
+        document.querySelector("#EditLocation .btn-primary").setAttribute("onclick", `UpdateLocation("${container}")`);
     }
 
 
@@ -1045,8 +1227,9 @@ require_once(ROOTER . 'includes/database.php');
         document.getElementById("EditLocation").style.display = "none";
     }
 
-    function openEditBrgy(trackingNumber,trackingyear) {
+    function openEditBrgy(trackingNumber,trackingyear,container) {
         document.getElementById("Editbrgymodal").style.display = "block";
+        document.querySelector("#Editbrgymodal .btn-primary").setAttribute("onclick", `UpdateBrgy("${container}")`);
     }
 
 
@@ -1108,7 +1291,7 @@ require_once(ROOTER . 'includes/database.php');
         }
     }
 
-    function saveInfraUploadPre() { 
+    function saveInfraUploadPre(containerId) { 
         var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
         // var tnNum = tnNumElement ? tnNumElement.innerText.trim() : ""; 
         var pictures = document.getElementById('infraUpFilePre').files;
@@ -1172,7 +1355,7 @@ require_once(ROOTER . 'includes/database.php');
 		// }
 
         if (err === 0) {
-            var container = document.getElementById("searchcontainer");
+            var container = document.getElementById(containerId);
             var formData = new FormData();
 
             formData.append("saveInfraUploadPre", 1);
@@ -1181,6 +1364,7 @@ require_once(ROOTER . 'includes/database.php');
             formData.append("predate", predate);
             formData.append("video", video);
             formData.append("pics", pictures);
+            formData.append("container", container.id);
 
             // ✅ Removed incorrect `formData.append("pics", pictures);`
             for (var i = 0; i < pictures.length; i++) {
@@ -1198,11 +1382,11 @@ require_once(ROOTER . 'includes/database.php');
             formData.forEach((value, key) => {
                 formDataContent += `${key}: ${value.name || value}\n`;
             });
-            document.getElementById("infrapddUploader").style.display = "none";
+            document.getElementById("infrapddUploaderModal").style.display = "none";
             loader(container);
             ajaxFormUpload1(formData, uploadLink, "saveInfraUploadPre", container);
         } else {
-            document.getElementById("infrapddUploader").style.display = "none";
+            document.getElementById("infrapddUploaderModal").style.display = "none";
             if(err == 1){
 				alert("Invalid photo file format.");	
 			}else if(err == 2){
@@ -1219,51 +1403,109 @@ require_once(ROOTER . 'includes/database.php');
         }
     }
 
-    function UpdatePreConDateVisit(){
+    function UpdatePreConDateVisit(containerId){
         var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
         var yearNumElement = document.getElementById('yearid'); 
         var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
         var datevisit = document.getElementById('editdatevisit').value;
 
-        container = document.getElementById('searchcontainer');
+        container = document.getElementById(containerId);
         loader(container);
-        var queryString = "?UpdatePreConDateVisit=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&datevisit=" + datevisit;
+        var queryString = "?UpdatePreConDateVisit=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&datevisit=" + datevisit + "&container=" + container.id;
         ajaxGetAndConcatenate(queryString,processorLink,container,"UpdatePreConDateVisit");
     }
 
-    function UpdateLocation(){
+    function UpdateCoordinates(containerId){
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var coordinates = document.getElementById('editcoordinates').value;
+
+        container = document.getElementById(containerId);
+        loader(container);
+        var queryString = "?UpdateCoordinates=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&coordinates=" + coordinates + "&container=" + container.id;
+        ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateCoordinates");
+    }
+
+
+    function UpdateMap(containerId) {
+        var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+        var yearNumElement = document.getElementById('yearid'); 
+        var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+        var map = document.getElementById('editmap').value.trim();
+        
+        // Validate Google Maps Embed Link
+        var embedRegex = /^https:\/\/www\.google\.com\/maps\/embed\?.+/;
+        if (!embedRegex.test(map)) {
+            alert("Invalid Google Maps Embed URL! Please enter a correct embed link.");
+            return;
+        }
+
+        var container = document.getElementById(containerId);
+        if (!container) {
+            alert("Container not found!");
+            return;
+        }
+
+        loader(container);
+        var queryString = "?UpdateMap=1&trackingNumber=" + encodeURIComponent(tnNum) +
+                        "&trackingyear=" + encodeURIComponent(year) +
+                        "&map=" + encodeURIComponent(map) +
+                        "&container=" + encodeURIComponent(container.id);
+
+        ajaxGetAndConcatenate(queryString, processorLink, container, "UpdateMap");
+    }
+
+
+
+    // function UpdateLocation(){
+    //     var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
+    //     var yearNumElement = document.getElementById('yearid'); 
+    //     var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
+    //     var location = document.getElementById('updatedlocation').value;
+
+    //     container = document.getElementById('searchcontainer');
+    //     loader(container);
+    //     var queryString = "?UpdateLocation=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&location=" + location;
+    //     ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateLocation");
+    // }
+    
+    function UpdateLocation(containerId){
+
         var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
         var yearNumElement = document.getElementById('yearid'); 
         var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
         var location = document.getElementById('updatedlocation').value;
 
-        container = document.getElementById('searchcontainer');
+        var container = document.getElementById(containerId); 
         loader(container);
-        var queryString = "?UpdateLocation=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&location=" + location;
+        var queryString = "?UpdateLocation=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&location=" + location + "&container=" + container.id ;
         ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateLocation");
     }
 
-    function UpdateVideoLink(){
+    
+
+    function UpdateVideoLink(containerId){
         var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
         var yearNumElement = document.getElementById('yearid'); 
         var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
         var videolink = document.getElementById('updatedvideolink').value;
 
-        container = document.getElementById('searchcontainer');
+        container = document.getElementById(containerId);
         loader(container);
-        var queryString = "?Updatevideolink=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&videolink=" + videolink;
+        var queryString = "?Updatevideolink=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&videolink=" + videolink + "&container=" + container.id;
         ajaxGetAndConcatenate(queryString,processorLink,container,"Updatevideolink");
     }
 
-    function UpdateBrgy(){
+    function UpdateBrgy(containerId){
         var tnNum = document.getElementById('tracknumid').textContent.replace(/\s/g, '');
         var yearNumElement = document.getElementById('yearid'); 
         var year = yearNumElement ? yearNumElement.innerText.trim() : ""; 
         var brgy = document.getElementById('updatedbrgy').value;
 
-        container = document.getElementById('searchcontainer');
+        container = document.getElementById(containerId);
         loader(container);
-        var queryString = "?UpdateBrgy=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&brgy=" + brgy;
+        var queryString = "?UpdateBrgy=1&trackingNumber=" + tnNum + "&trackingyear=" + year + "&brgy=" + brgy + "&container=" + container.id;
         ajaxGetAndConcatenate(queryString,processorLink,container,"UpdateBrgy");
     }
 
@@ -1301,6 +1543,7 @@ require_once(ROOTER . 'includes/database.php');
                         "&trackingNumber=" + encodeURIComponent(trackingNumber) +
                         "&trackingyear=" + encodeURIComponent(trackingyear) +
                         "&role=" + encodeURIComponent(role) +
+                        "&container=" + encodeURIComponent(containername) +
                         "&selectedProgrammers=" + selectedProgrammers.join("|") +
                         "&allProgrammers=" + allProgrammers.join("|");
 

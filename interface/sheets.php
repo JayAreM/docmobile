@@ -19,13 +19,13 @@ class Sheets extends MySQLDatabase {
         $pic_Count = $data['count'];
 
 
-        if( $_SESSION['perm'] == '40'){
+        if( $_SESSION['CEOPDD'] == '1'){
             return "
                 <tr class='uploadpicture-container' style=''>
                     <td class='trackertd'> <small>".$numberRow++."</small> </td>
-                    <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'> Pre-Construction Pictures ($pic_Count)</td>
+                    <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1)'> Pre-Construction Pictures ($pic_Count)</td>
                     <td style='text-align:right;'>
-                        <button class='btn btn-primary' onclick='openInfrapddUploader($trackingNumber,$trackingyear)' style='vertical-align:bottom;padding:0px 5px;border-radius:2px;margin-bottom:0px;margin-right:10px;'>
+                        <button class='btn btn-primary' onclick='openInfrapddUploader(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"searchcontainer\")' style='vertical-align:bottom;padding:0px 5px;border-radius:2px;margin-bottom:0px;margin-right:10px;'>
                             +
                         </button>
 
@@ -42,13 +42,67 @@ class Sheets extends MySQLDatabase {
         $pic_Count = $data['count'];
 
 
-        if( $_SESSION['perm'] == '40'){
+        // if( $_SESSION['CEOPDD'] == '1'){
+        //     return "
+        //         <tr class='uploadpicture-container' style=''>
+        //             <td class='trackertd'> <small>".$numberRow++."</small> </td>
+        //             <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1);'> Pre-Construction Pictures ($pic_Count)</td>
+        //             <td style='text-align:right;'>
+
+        //             </td>
+        //         </tr>
+        //     ";
+        // }
+
+
+        
+        if( $_SESSION['CEOPDD'] == '1'){
             return "
                 <tr class='uploadpicture-container' style=''>
                     <td class='trackertd'> <small>".$numberRow++."</small> </td>
-                    <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'> Pre-Construction Pictures ($pic_Count)</td>
+                    <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1)'> Pre-Construction Pictures ($pic_Count)</td>
                     <td style='text-align:right;'>
+                        <button class='btn btn-primary' onclick='openInfrapddUploader(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"mycardprojectresults\")' style='vertical-align:bottom;padding:0px 5px;border-radius:2px;margin-bottom:0px;margin-right:10px;'>
+                            +
+                        </button>
 
+                    </td>
+                </tr>
+            ";
+        }
+    }
+
+
+    function ListofProjectDetailsgenerateInfraUploadPDDButton($trackingNumber, $trackingyear,$numberRow) {
+        $sql = "Select count(*) as count from citydoc$trackingyear.infrauploads where TrackingNumber = '$trackingNumber' and type = 'Image'";
+        $result = $this->query($sql);
+        $data = $result->fetch_array();
+        $pic_Count = $data['count'];
+
+
+        // if( $_SESSION['CEOPDD'] == '1'){
+        //     return "
+        //         <tr class='uploadpicture-container' style=''>
+        //             <td class='trackertd'> <small>".$numberRow++."</small> </td>
+        //             <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1);'> Pre-Construction Pictures ($pic_Count)</td>
+        //             <td style='text-align:right;'>
+
+        //             </td>
+        //         </tr>
+        //     ";
+        // }
+
+
+        
+        if( $_SESSION['CEOPDD'] == '1'){
+            return "
+                <tr class='uploadpicture-container' style=''>
+                    <td class='trackertd'> <small>".$numberRow++."</small> </td>
+                    <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1)'> Pre-Construction Pictures ($pic_Count)</td>
+                    <td style='text-align:right;'>
+                        <button class='btn btn-primary' onclick='openInfrapddUploader(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"listofprojectresults\")' style='vertical-align:bottom;padding:0px 5px;border-radius:2px;margin-bottom:0px;margin-right:10px;'>
+                            +
+                        </button>
                     </td>
                 </tr>
             ";
@@ -863,13 +917,15 @@ class Sheets extends MySQLDatabase {
             $location = $data['Location'];
             $brgy = $data['Barangay'];
             $progress =  $data['Progress'];
+            $coordinates = $data['Coordinates'];
+            $map = $data['Map'];
             $duration = !empty($data['Duration']) ? $data['Duration'] : "";
             unset($data);
 
             $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
             $result = $this->query($sql);
 
-            if($_SESSION['perm'] == '40'){
+            if($_SESSION['CEOPDD'] == '1'){
                 $cardHtml = '
                 <div class="project-team-card">
                     <h2 class="project-team-title">Project Team</h2>
@@ -877,54 +933,93 @@ class Sheets extends MySQLDatabase {
 
                 // Define hardcoded roles
                 $hardcodedRoles = [
-                    "Programmer" => [],
-                    "Checker" => [],
-                    "Draftsman" => [],
-                    "Surveyor" => [],
-                    "Inspector" => []
+                    "PoW Lead Engineer" => [],
+                    "PoW Civil Engineer" => [],
+                    "Project Surveyor" => [],
+                    "Project Architect" => [],
+                    "Project Electrical Engineer" => [],
+                    "Project Plumber" => [],
+                    "Project Structural Engineer" => [],
+                    "Project Structural Engineer" => [],
+                    "Construction Inspector" => []
                 ];
                 $employeeNum = '';
                 while ($row = $result->fetch_array()) {
                     $role = $row['Function'];
+                    $displayrole = '';
+
+                    if ($role == 'Pos2') {
+                        $displayrole = 'PoW Lead Engineer';
+                    }elseif ($role == 'Pos1') {
+                        $displayrole = 'PoW Civil Engineer';
+                    }elseif ($role == 'Surveyor') {
+                        $displayrole = 'Project Surveyor';
+                    }elseif ($role == 'Pos3') {
+                        $displayrole = 'Project Architect';
+                    }elseif ($role == 'Pos4') {
+                        $displayrole = 'Project Electrical Engineer';
+                    }elseif ($role == 'Pos5') {
+                        $displayrole = 'Project Plumber';
+                    }elseif ($role == 'Pos6') {
+                        $displayrole = 'Project Structural Engineer';
+                    }elseif ($role == 'Inspector') {
+                        $displayrole = 'Construction Inspector';
+                    }
+
                     $member = $row['Name'];
                     $employeeNum = $row['EmployeeNumber'];
 
-                    if (isset($hardcodedRoles[$role])) {
-                        $hardcodedRoles[$role][] = $member;
+                    if (isset($hardcodedRoles[$displayrole])) {
+                        $hardcodedRoles[$displayrole][] = $member;
                     }
                 }
 
                 foreach ($hardcodedRoles as $role => $members) {
                     $cardHtml .= '<div class="project-role" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>' . htmlspecialchars($role) . '</span>
-                                    <button class="ri-edit-box-line" style="margin-left:.3rem;font-weight:bold;color:var(--text-color);"  
-                                        onclick="EditRole(\'' . htmlspecialchars($trackingNumber) . '\', \'' . htmlspecialchars($trackingyear) . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($employeeNum) . '\',searchcontainer)">
-                                    </button>
-                                </div>';
-    
-                    
-                    if (!empty($members)) {
-                        $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
-                    } else {
-                        $cardHtml .= '<div class="project-members">-</div>'; 
-                    }
-                }
+                                            <span>' . htmlspecialchars($role) . '</span>
+                                            <button class="ri-edit-box-line" style="margin-left:.3rem;font-weight:bold;color:var(--text-color);"  
+                                                onclick="EditRole(\'' . htmlspecialchars($trackingNumber) . '\', \'' . htmlspecialchars($trackingyear) . '\',\'' . htmlspecialchars($role) . '\',\'' . htmlspecialchars($employeeNum) . '\',searchcontainer)">
+                                            </button>
+                                        </div>';
+            
+                                
+                                        if (!empty($members)) {
+                                                $cardHtml .= '<div class="project-members">' . implode('<br>', array_map('htmlspecialchars', $members)) . '</div>';
+                                            } else {
+                                                $cardHtml .= '<div class="project-members">-</div>'; 
+                                            }
+                                        }
 
-                $cardHtml .= '
-                    </div>
-                </div>';
+                                    $cardHtml .= '
+                                        </div>
+                                    </div>';
 
                 $status = $newRecord['Status'];
-                echo "
+
+                $sheet = '';
+
+                $sheet .="
                     <div>
                         <div class='trackerheader'>
-                            <span class='tracker-title'>" . $status . "  
-                                <button class='ri-edit-box-line' 
-                                    style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
-                                    onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", searchcontainer)'>
-                                </button>
-                            </span>
-                            <p class='tracker-office'>" . htmlspecialchars($newRecord['OfficeName'], ENT_QUOTES) . "</p>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <span class='tracker-title' style='color:rgba(51,117,147,1);'>" . $status . " </span>
+                                    </td>
+                                    <td>
+                                        <button class='ri-edit-box-line' 
+                                            style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
+                                            onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", searchcontainer)'>
+                                        </button>
+                                    </td>
+                                <tr>
+                                <tr>
+                                    <td>
+                                     <p class='tracker-office'>" . htmlspecialchars($newRecord['OfficeName'], ENT_QUOTES) . "</p>
+                                    </td>
+                                </tr>
+                            </table>
+                           
                         </div>
                     </div>
 
@@ -954,12 +1049,19 @@ class Sheets extends MySQLDatabase {
                                 //     </tr>
                                 //     ";
                                 // }
+                                $iframemap = "";
+                                if (!empty($map)) {
+                                
+                                    $iframemap = "<iframe src='$map' width='100%' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>";
+                                } else {
+                                    $iframemap = ""; 
+                                }
 
-                                echo "
+                                $sheet .="
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Project Name</td>
                                     
                                     </tr>
                                     <tr>
@@ -971,7 +1073,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location <button class='ri-edit-box-line' style='margin-left:1.45rem;font-weight:bold;color:var(--text-color);' onclick='openEditLocation($trackingNumber,$trackingyear)'></button></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Location <button class='ri-edit-box-line' style='margin-left:1.45rem;font-weight:bold;color:var(--text-color);'   onclick='openEditLocation(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -982,7 +1084,7 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditBrgy($trackingNumber,$trackingyear)'></button></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Barangay <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditBrgy(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -993,43 +1095,67 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>TN</td>
                                         <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>Year</td>
                                         <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1)'>Project Duration</td>
                                         <td class='trackingspecs' >
                                             ".$duration."
                                         </td>
                                     </tr>
                                     <tr style=''>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>Date Visited</td>
                                         <td class='trackingspecs' >
                                             <div>
-                                            ".$datevisited." <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditDateVisited($trackingNumber,$trackingyear)'></button>
+                                            ".$datevisited." <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditDateVisited(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Coordinates  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditCoordinates(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                        $coordinates 
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Map  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditMap(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                             $iframemap
                                         </td>
                                     </tr>
                                     " . $this->generateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
                                     " . $this->ImageContainer($trackingNumber,$trackingyear) . "
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                    <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
-                                        <div style='color:var(--first-color)'>Video Link <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);font-weight:bold;' onclick='openEditVideoLink($trackingNumber,$trackingyear)'></button></div>
-                                        <div style='margin-top:5px;'> $videolink </div>
-                                    </td>
+                                        <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
+                                            <div style='color:rgba(51,117,147,1)'>Video Link <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);font-weight:bold;' onclick='openEditVideoLink(\"$trackingNumber\", \"$trackingyear\", \"searchcontainer\")'></button></div>
+                                            <div style='margin-top:5px;'> $videolink </div>
+                                        </td>
 
                                         
 
                                     </tr>";
                                     
-                                echo "
+                                $sheet .= "
                             </tbody>
                         </table>
 
@@ -1038,6 +1164,8 @@ class Sheets extends MySQLDatabase {
                     </div>
                 
                 </div>";
+
+                echo $sheet;
             }
 
             
@@ -1100,34 +1228,60 @@ class Sheets extends MySQLDatabase {
             $location = $data['Location'];
             $brgy = $data['Barangay'];
             $progress =  $data['Progress'];
+            $coordinates =  $data['Coordinates'];
+            $map =  $data['Map'];
             $duration = !empty($data['Duration']) ? $data['Duration'] : "";
             unset($data);
 
             $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
             $result = $this->query($sql);
 
-            if($_SESSION['perm'] == '40'){
+            if($_SESSION['CEOPDD'] == '1'){
                 $cardHtml = '
                 <div class="project-team-card">
-                    <h2 class="project-team-title">Project Team</h2>
+                    <h2 class="project-team-title" style="color:rgba(51,117,147,1);">Project Team</h2>
                     <div class="project-team-section">';
 
                 // Define hardcoded roles
                 $hardcodedRoles = [
-                    "Programmer" => [],
-                    "Checker" => [],
-                    "Draftsman" => [],
-                    "Surveyor" => [],
-                    "Inspector" => []
+                    "PoW Lead Engineer" => [],
+                    "PoW Civil Engineer" => [],
+                    "Project Surveyor" => [],
+                    "Project Architect" => [],
+                    "Project Electrical Engineer" => [],
+                    "Project Plumber" => [],
+                    "Project Structural Engineer" => [],
+                    "Project Structural Engineer" => [],
+                    "Construction Inspector" => []
                 ];
                 $employeeNum = '';
                 while ($row = $result->fetch_array()) {
                     $role = $row['Function'];
+                    $displayrole = '';
+
+                    if ($role == 'Pos2') {
+                        $displayrole = 'PoW Lead Engineer';
+                    }elseif ($role == 'Pos1') {
+                        $displayrole = 'PoW Civil Engineer';
+                    }elseif ($role == 'Surveyor') {
+                        $displayrole = 'Project Surveyor';
+                    }elseif ($role == 'Pos3') {
+                        $displayrole = 'Project Architect';
+                    }elseif ($role == 'Pos4') {
+                        $displayrole = 'Project Electrical Engineer';
+                    }elseif ($role == 'Pos5') {
+                        $displayrole = 'Project Plumber';
+                    }elseif ($role == 'Pos6') {
+                        $displayrole = 'Project Structural Engineer';
+                    }elseif ($role == 'Inspector') {
+                        $displayrole = 'Construction Inspector';
+                    }
+
                     $member = $row['Name'];
                     $employeeNum = $row['EmployeeNumber'];
 
-                    if (isset($hardcodedRoles[$role])) {
-                        $hardcodedRoles[$role][] = $member;
+                    if (isset($hardcodedRoles[$displayrole])) {
+                        $hardcodedRoles[$displayrole][] = $member;
                     }
                 }
 
@@ -1150,21 +1304,31 @@ class Sheets extends MySQLDatabase {
                 </div>';
 
                 $status = $newRecord['Status'];
-                echo "
+
+                $iframemap = "";
+                if (!empty($map)) {
+                
+                    $iframemap = "<iframe src='$map' width='100%' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>";
+                } else {
+                    $iframemap = ""; 
+                }
+
+                $sheet = '';
+                $sheet .="
                     <div>
                         <div class='trackerheader' >
                             <table border='0'>
                                 <tr>
                                     <td>
-                                        <span class='tracker-title'>" . $status . "  
+                                        <span class='tracker-title' style='color:rgba(51,117,147,1);'>" . $status . "  
                                            
                                         </span>
                                     </td>   
                                     <td style='text-align:right;width:0px;'>
-                                     <button class='ri-edit-box-line' 
-                                                style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
-                                            onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", mycardprojectresults)'>
-                                            </button>
+                                        <button class='ri-edit-box-line' 
+                                                    style='margin-left:1rem;color:var(--text-color);font-weight:bold;font-size:var(--normal-font-size)' 
+                                                onclick='openEditStatus(\"" . $trackingNumber . "\", \"" . $trackingyear . "\", \"" . $status . "\", mycardprojectresults)'>
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1203,11 +1367,11 @@ class Sheets extends MySQLDatabase {
                                 //     ";
                                 // }
 
-                                echo "
+                                $sheet .="
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Project Name</td>
                                     
                                     </tr>
                                     <tr>
@@ -1219,7 +1383,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location </td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Location <button class='ri-edit-box-line' style='margin-left:1.45rem;font-weight:bold;color:var(--text-color);'   onclick='openEditLocation(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -1230,7 +1394,7 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay </td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Barangay <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditBrgy(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -1241,41 +1405,69 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>TN</td>
                                         <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>Year</td>
                                         <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1)'>Project Duration</td>
                                         <td class='trackingspecs' >
                                             ".$duration."
                                         </td>
                                     </tr>
                                     <tr style=''>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1)'>Date Visited</td>
                                         <td class='trackingspecs' >
                                             <div>
-                                            ".$datevisited." 
+                                            ".$datevisited." <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditDateVisited(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button>
                                         </td>
                                     </tr>
+
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Coordinates  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditCoordinates(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                        $coordinates 
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Map  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditMap(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                             $iframemap
+                                        </td>
+                                    </tr>
+                                    
                                     " . $this->MyProjectDetailsgenerateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
                                     " . $this->ImageContainer($trackingNumber,$trackingyear) . "
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
                                     <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
-                                        <div style='color:var(--first-color)'>Video Link </div>
+                                        <div style='color:rgba(51,117,147,1)'>Video Link <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);font-weight:bold;' onclick='openEditVideoLink(\"$trackingNumber\", \"$trackingyear\", \"mycardprojectresults\")'></button></div>
                                         <div style='margin-top:5px;'> $videolink </div>
                                     </td>
 
+                                        
+
                                     </tr>";
                                     
-                                echo "
+                                $sheet .= "
                             </tbody>
                         </table>
 
@@ -1284,7 +1476,10 @@ class Sheets extends MySQLDatabase {
                     </div>
                 
                 </div>";
+
+                echo $sheet;
             }
+        
 
             
         }
@@ -1348,13 +1543,15 @@ class Sheets extends MySQLDatabase {
             $location = $data['Location'];
             $brgy = $data['Barangay'];
             $progress =  $data['Progress'];
+            $coordinates =  $data['Coordinates'];
+            $map =  $data['Map'];
             $duration = !empty($data['Duration']) ? $data['Duration'] : "";
             unset($data);
 
             $sql = "SELECT `Function`, `Name`, EmployeeNumber FROM citydoc$trackingyear.projectmanpower WHERE trackingnumber = '$trackingNumber'";
             $result = $this->query($sql);
 
-            if($_SESSION['perm'] == '40'){
+            if($_SESSION['CEOPDD'] == '1'){
                 $cardHtml = '
                 <div class="project-team-card">
                     <h2 class="project-team-title">Project Team</h2>
@@ -1362,20 +1559,44 @@ class Sheets extends MySQLDatabase {
 
                 // Define hardcoded roles
                 $hardcodedRoles = [
-                    "Programmer" => [],
-                    "Checker" => [],
-                    "Draftsman" => [],
-                    "Surveyor" => [],
-                    "Inspector" => []
+                    "PoW Lead Engineer" => [],
+                    "PoW Civil Engineer" => [],
+                    "Project Surveyor" => [],
+                    "Project Architect" => [],
+                    "Project Electrical Engineer" => [],
+                    "Project Plumber" => [],
+                    "Project Structural Engineer" => [],
+                    "Project Structural Engineer" => [],
+                    "Construction Inspector" => []
                 ];
                 $employeeNum = '';
                 while ($row = $result->fetch_array()) {
                     $role = $row['Function'];
+                    $displayrole = '';
+
+                    if ($role == 'Pos2') {
+                        $displayrole = 'PoW Lead Engineer';
+                    }elseif ($role == 'Pos1') {
+                        $displayrole = 'PoW Civil Engineer';
+                    }elseif ($role == 'Surveyor') {
+                        $displayrole = 'Project Surveyor';
+                    }elseif ($role == 'Pos3') {
+                        $displayrole = 'Project Architect';
+                    }elseif ($role == 'Pos4') {
+                        $displayrole = 'Project Electrical Engineer';
+                    }elseif ($role == 'Pos5') {
+                        $displayrole = 'Project Plumber';
+                    }elseif ($role == 'Pos6') {
+                        $displayrole = 'Project Structural Engineer';
+                    }elseif ($role == 'Inspector') {
+                        $displayrole = 'Construction Inspector';
+                    }
+
                     $member = $row['Name'];
                     $employeeNum = $row['EmployeeNumber'];
 
-                    if (isset($hardcodedRoles[$role])) {
-                        $hardcodedRoles[$role][] = $member;
+                    if (isset($hardcodedRoles[$displayrole])) {
+                        $hardcodedRoles[$displayrole][] = $member;
                     }
                 }
 
@@ -1400,13 +1621,21 @@ class Sheets extends MySQLDatabase {
                 </div>';
 
                 $status = $newRecord['Status'];
+
+                $iframemap = "";
+                if (!empty($map)) {
+                
+                    $iframemap = "<iframe src='$map' width='100%' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>";
+                } else {
+                    $iframemap = ""; 
+                }
                 echo "
                     <div>
                         <div class='trackerheader' >
                             <table border='0'>
                                 <tr>
                                     <td>
-                                        <span class='tracker-title'>" . $status . "  
+                                        <span class='tracker-title' style='color:rgba(51,117,147,1);'>" . $status . "  
                                            
                                         </span>
                                     </td>   
@@ -1457,7 +1686,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Project Name</td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1);'>Project Name</td>
                                     
                                     </tr>
                                     <tr>
@@ -1469,7 +1698,7 @@ class Sheets extends MySQLDatabase {
                                     
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Location </td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1);'>Location  <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditLocation(\"$trackingNumber\", \"$trackingyear\", \"listofprojectresults\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -1480,7 +1709,7 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' colspan='2' style='color:var(--first-color)'>Barangay </td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1);'>Barangay <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditBrgy(\"$trackingNumber\", \"$trackingyear\", \"listofprojectresults\")'></button></td>
                                     
                                     </tr>
                                     <tr>
@@ -1491,35 +1720,61 @@ class Sheets extends MySQLDatabase {
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>TN</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1);'>TN</td>
                                         <td class='trackingspecs' > <span id='tracknumid'>$trackingNumber</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Year</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1);'>Year</td>
                                         <td class='trackingspecs' > <span id='yearid'>".$newRecord['Year']."</span></td>
                                     </tr>
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='white-space:nowrap;color:var(--first-color)'>Project Duration</td>
+                                        <td class='trackerlabel' style='white-space:nowrap;color:rgba(51,117,147,1);'>Project Duration</td>
                                         <td class='trackingspecs' >
                                             ".$duration."
                                         </td>
                                     </tr>
                                     <tr style=''>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
-                                        <td class='trackerlabel' style='color:var(--first-color)'>Date Visited</td>
+                                        <td class='trackerlabel' style='color:rgba(51,117,147,1);'>Date Visited </td>
                                         <td class='trackingspecs' >
                                             <div>
-                                            ".$datevisited." 
+                                            ".$datevisited."   <button class='ri-edit-box-line' style='margin-left:1rem;font-weight:bold;color:var(--text-color);' onclick='openEditDateVisited(\"$trackingNumber\", \"$trackingyear\", \"listofprojectresults\")'></button>
                                         </td>
                                     </tr>
-                                    " . $this->MyProjectDetailsgenerateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Coordinates  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditCoordinates(\"$trackingNumber\", \"$trackingyear\", \"listofprojectresults\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                        $coordinates 
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class='trackertd'><small>" . $numberRow++ . "</small></td>
+                                        <td class='trackerlabel' colspan='2' style='color:rgba(51,117,147,1)'>Map  <button class='ri-edit-box-line' style='margin-left:1rem;color:var(--text-color);' onclick='openEditMap(\"$trackingNumber\", \"$trackingyear\", \"listofprojectresults\")'></button> </td>
+                                    
+                                    </tr>
+                                    <tr>
+                                        <td class='trackertd'></td>
+                                        <td class='trackerlabel' colspan='2' style='font-weight:bold;padding-left:5px;text-align: left;padding-top:.1em;padding-bottom:1em'>
+                                             $iframemap
+                                        </td>
+                                    </tr>
+
+
+                                    " . $this->ListofProjectDetailsgenerateInfraUploadPDDButton($trackingNumber,$trackingyear,$numberRow++ ) . "
                                     " . $this->ImageContainer($trackingNumber,$trackingyear) . "
                                     <tr>
                                         <td class='trackertd'><small>" . $numberRow++ . "</small></td>
                                     <td colspan='2' class='trackerlabel' style='vertical-align:top ; padding:5px;'>
-                                        <div style='color:var(--first-color)'>Video Link </div>
+                                        <div style='color:rgba(51,117,147,1);'>Video Link </div>
                                         <div style='margin-top:5px;'> $videolink </div>
                                     </td>
 

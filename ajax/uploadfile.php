@@ -116,8 +116,8 @@
 		$year = $database->charEncoder($_POST['year']);
 		$tn = $database->charEncoder($_POST['tn']);
 		$predate = $database->charEncoder($_POST['predate']);
-        $newRecord = $database->searchTrackingNumber2022($tn,$year);
         $video = $database->charEncoder($_POST['video']);
+		$container = $database->charEncoder($_POST['container']);
         
 		if(isset($_FILES['pics'])){
 			$pics = $_FILES['pics'];
@@ -188,7 +188,14 @@
 			$database->query($sql);
          
 		}
-        echo $sheet->CreateTrackerInterfaceResult($tn,$newRecord,$year );
+        $newRecord = $database->searchTrackingNumber2022($tn,$year);
+		if($container == 'searchcontainer'){
+       		echo $sheet->CreateTrackerInterfaceResult($tn,$newRecord,$year );
+		}else if($container == 'mycardprojectresults'){
+			echo $sheet->MyProjectDetails($tn,$newRecord,$year );
+	 	}else if($container == 'listofprojectresults'){
+			echo $sheet->ListofmyProjectDetails($tn,$newRecord,$year );
+	 	}
 	}
 
 	if(isset($_POST['updateInfraUploadFull'])) { //peter mod 30-1-25
